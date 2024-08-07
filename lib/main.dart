@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'home_tab.dart';
+import 'search_tab.dart';
+import 'about_tab.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,9 +14,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Bottom Tabs Demo',
+      title: 'Forecast Friend',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF234E3D)),
       ),
       home: const MyHomePage(),
     );
@@ -29,21 +32,21 @@ class MyHomePage extends StatelessWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Flutter Bottom Tabs Demo'),
+          title: const Text('Forecast Friend'),
         ),
         body: const TabBarView(
           children: [
-            Center(child: Text('Home Page')),
-            Center(child: Text('Location Page')),
-            Center(child: Text('About Page')),
+            HomeTab(),
+            SearchTab(),
+            AboutTab(),
           ],
         ),
         bottomNavigationBar: Container(
-          color: Colors.lightBlueAccent,
+          color: Colors.tealAccent,
           child: const TabBar(
             tabs: [
               Tab(icon: Icon(Icons.home), text: 'Home'),
-              Tab(icon: Icon(Icons.location_on), text: 'Location'),
+              Tab(icon: Icon(Icons.search), text: 'Search'),
               Tab(icon: Icon(Icons.info), text: 'About'),
             ],
           ),
