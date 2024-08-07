@@ -11,9 +11,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Bottom Tabs Demo',
+      title: 'Forecast Friend',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF234E3D)),
       ),
       home: const MyHomePage(),
     );
@@ -29,7 +29,7 @@ class MyHomePage extends StatelessWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Flutter Bottom Tabs Demo'),
+          title: const Text('Forecast Friend'),
         ),
         body: const TabBarView(
           children: [
@@ -39,7 +39,7 @@ class MyHomePage extends StatelessWidget {
           ],
         ),
         bottomNavigationBar: Container(
-          color: Colors.lightBlueAccent,
+          color: Colors.tealAccent,
           child: const TabBar(
             tabs: [
               Tab(icon: Icon(Icons.home), text: 'Home'),
