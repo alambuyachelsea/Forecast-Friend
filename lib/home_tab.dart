@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:carousel_slider/carousel_slider.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -11,68 +11,89 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  List<String> towns = [];
+  String nearestCity = 'Loading...';
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    loadTowns();
+    fetchNearestCity();
   }
 
-  Future<void> loadTowns() async {
-    final String response = await rootBundle.loadString('assets/towns.json');
-    final List<dynamic> data = json.decode(response);
-    setState(() {
-      towns = data.map((town) => town['name'] as String).toList();
-    });
+  Future<void> fetchNearestCity() async {
+    try {
+      Position position = await _getCurrentLocation();
+      print('Current Position: ${position.latitude}, ${position.longitude}');
+      final city = await _findNearestCity(position);
+      setState(() {
+        nearestCity = city;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error: $e');
+      setState(() {
+        nearestCity = 'Error finding city';
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Location permissions are denied.');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Location permissions are permanently denied.');
+    }
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+  }
+
+  Future<String> _findNearestCity(Position position) async {
+    final lat = position.latitude;
+    final lon = position.longitude;
+    const apiKey = 'AIzaSyA69a-cGEZ16aiRkYjLfIBncs_QriDKiok'; // Replace with your API key
+
+    final response = await http.get(Uri.parse(
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=50000&type=locality&key=$apiKey'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print('API Response: $data');
+      if (data['results'] != null && data['results'].isNotEmpty) {
+        return data['results'][0]['name'];
+      } else {
+        return 'No city found';
+      }
+    } else {
+      print('Failed to load nearest city. Status code: ${response.statusCode}');
+      throw Exception('Failed to load nearest city');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return towns.isEmpty
+    return isLoading
         ? const Center(child: CircularProgressIndicator())
-        : Scrollbar(
-      child: CarouselSlider(
-        options: CarouselOptions(
-          height: 700, // Set the height of the carousel
-          enableInfiniteScroll: false, // Disable infinite scroll
-          viewportFraction: 0.9, // Adjust this value to fill more space
-          autoPlay: false, // Disable autoplay
-          enlargeCenterPage: true,
-        ),
-        items: towns.map((town) {
-          return Builder(
-            builder: (BuildContext context) {
-              return Align(
-                alignment: Alignment.topCenter, // Align the card to the top
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 0.9, // Set the width of each card
-                    height: 660, // Set the height of each card
-                    margin: const EdgeInsets.only(top: 0.0), // Adjust the top margin
-                    decoration: BoxDecoration(
-                      color: Colors.teal,
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child: Center(
-                      child: Text(
-                        town,
-                        style: const TextStyle(
-                          fontSize: 24.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
-        }).toList(),
+        : Center(
+      child: Text(
+        'Nearest City: $nearestCity',
+        style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
       ),
     );
   }
