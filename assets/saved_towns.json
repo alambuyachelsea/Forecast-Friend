@@ -1,5 +1,10 @@
-[
-  {"name": "Stockholm"},
-  {"name": "Kampala"},
-  {"name": "Berlin"}
-]
+{
+  "towns" : [
+    "Stockholm",
+    "Kampala",
+    "California",
+    "Berlin"
+  ]
+
+}
+

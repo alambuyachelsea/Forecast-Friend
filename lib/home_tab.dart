@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -11,33 +12,50 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  String nearestCity = 'Loading...';
+  List<String> townNames = []; // List to store the nearest city and towns from JSON
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchNearestCity();
+    loadTownsAndFetchNearestCity();
   }
 
-  Future<void> fetchNearestCity() async {
+  Future<void> loadTownsAndFetchNearestCity() async {
     try {
+      // Load towns from JSON file
+      List<String> towns = await _loadTownsFromJson();
+      print('Loaded towns from JSON: $towns');
+
+      // Fetch nearest city
       Position position = await _getCurrentLocation();
       print('Current Position: ${position.latitude}, ${position.longitude}');
-      final city = await _findNearestCity(position);
+      String nearestCity = await _findNearestCity(position);
+      print('Nearest City: $nearestCity');
+
+      // Combine nearest city with the towns from the JSON file
       setState(() {
-        nearestCity = city;
+        townNames = [nearestCity, ...towns];
         isLoading = false;
       });
     } catch (e) {
       print('Error: $e');
       setState(() {
-        nearestCity = 'Error finding city';
+        townNames = ['Error finding nearest city or loading towns'];
         isLoading = false;
       });
     }
   }
 
+  // Load towns from the JSON file
+  Future<List<String>> _loadTownsFromJson() async {
+    final String response = await rootBundle.loadString('assets/saved_towns.json');
+    final data = json.decode(response);
+    List<String> towns = List<String>.from(data['towns']);
+    return towns;
+  }
+
+  // Get the current location of the device
   Future<Position> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -64,6 +82,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  // Find the nearest city using Google Places API
   Future<String> _findNearestCity(Position position) async {
     final lat = position.latitude;
     final lon = position.longitude;
@@ -90,11 +109,17 @@ class _HomeTabState extends State<HomeTab> {
   Widget build(BuildContext context) {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
-        : Center(
-      child: Text(
-        'Nearest City: $nearestCity',
-        style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
-      ),
+        : ListView.builder(
+      itemCount: townNames.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(
+            townNames[index],
+            style: const TextStyle(fontSize: 18.0),
+          ),
+        );
+      },
     );
   }
 }
+
