@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
+import 'town_card.dart';  // Import the TownCard widget
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -72,14 +73,7 @@ class _HomeTabState extends State<HomeTab> {
         throw Exception('Location permissions are denied.');
       }
     }
-
-    if (permission == LocationPermission.deniedForever) {
-      throw Exception('Location permissions are permanently denied.');
-    }
-
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+    
   }
 
   // Find the nearest city using Google Places API
@@ -109,17 +103,15 @@ class _HomeTabState extends State<HomeTab> {
   Widget build(BuildContext context) {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
-        : ListView.builder(
-      itemCount: townNames.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(
-            townNames[index],
-            style: const TextStyle(fontSize: 18.0),
-          ),
-        );
-      },
+        : Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      child: PageView.builder(
+        itemCount: townNames.length,
+        controller: PageController(viewportFraction: 0.8),
+        itemBuilder: (context, index) {
+          return TownCard(townName: townNames[index]);
+        },
+      ),
     );
   }
 }
-
