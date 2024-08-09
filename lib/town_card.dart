@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class TownCard extends StatelessWidget {
   final String townName;
+  final String currentLocation;
 
-  const TownCard({Key? key, required this.townName}) : super(key: key);
+  const TownCard({super.key, required this.townName, required this.currentLocation});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +20,7 @@ class TownCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSection('Location'),
+                _buildLocationSection(),
                 _buildSection('Visual Summary'),
                 _buildSection('Verbal Summary'),
                 _buildSection('Hourly Info'),
@@ -29,6 +30,47 @@ class TownCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.teal, width: 2),
+          color: Colors.teal.withOpacity(0.1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(
+              townName == currentLocation
+                  ? Icons.location_on // Filled icon if town matches current location
+                  : Icons.location_on_outlined, // Outlined icon if town doesn't match
+              color: Colors.teal,
+            ),
+            Text(
+              townName,
+              style: const TextStyle(
+                fontSize: 20.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.teal,
+              ),
+            ),
+            Visibility(
+              visible: townName != currentLocation, // Icon is visible only if townName doesn't match currentLocation
+              child: const Icon(
+                Icons.star,
+                color: Colors.yellow,
+              ),
+            )
+
+          ],
         ),
       ),
     );
