@@ -4,7 +4,8 @@ class TownCard extends StatelessWidget {
   final String townName;
   final String currentLocation;
 
-  const TownCard({super.key, required this.townName, required this.currentLocation});
+  const TownCard(
+      {super.key, required this.townName, required this.currentLocation});
 
   @override
   Widget build(BuildContext context) {
@@ -50,26 +51,30 @@ class TownCard extends StatelessWidget {
           children: [
             Icon(
               townName == currentLocation
-                  ? Icons.location_on // Filled icon if town matches current location
-                  : Icons.location_on_outlined, // Outlined icon if town doesn't match
+                  ? Icons
+                      .location_on // Filled icon if town matches current location
+                  : Icons
+                      .location_on_outlined, // Outlined icon if town doesn't match
               color: Colors.teal,
             ),
             Text(
               townName,
               style: const TextStyle(
-                fontSize: 20.0,
+                fontSize: 24.0,
                 fontWeight: FontWeight.bold,
                 color: Colors.teal,
               ),
             ),
-            Visibility(
-              visible: townName != currentLocation, // Icon is visible only if townName doesn't match currentLocation
-              child: const Icon(
-                Icons.star,
-                color: Colors.yellow,
+            if (townName != currentLocation)
+              const ToggleStarButton()
+            else
+              const Opacity(
+                opacity: 0.0, // Makes the icon fully transparent
+                child: Icon(
+                  Icons.star_border, // Use the outlined star icon
+                  color: Colors.yellow,
+                ),
               ),
-            )
-
           ],
         ),
       ),
@@ -95,6 +100,36 @@ class TownCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class ToggleStarButton extends StatefulWidget {
+  const ToggleStarButton({super.key});
+
+  @override
+  _ToggleStarButtonState createState() => _ToggleStarButtonState();
+}
+
+class _ToggleStarButtonState extends State<ToggleStarButton> {
+  bool _isFilled = true; // Tracks whether the icon is filled or outlined
+
+  void _toggleIcon() {
+    setState(() {
+      _isFilled = !_isFilled; // Toggle the state between filled and outlined
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Icon(
+        _isFilled
+            ? Icons.star
+            : Icons.star_border, // Use filled or outlined icon based on state
+        color: Colors.yellow,
+      ),
+      onPressed: _toggleIcon, // Toggle the icon when pressed remove or add city to list
     );
   }
 }
