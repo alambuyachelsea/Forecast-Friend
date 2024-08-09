@@ -3,7 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
-import 'town_card.dart';  // Import the TownCard widget
+import 'town_card.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -13,7 +13,9 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  List<String> townNames = []; // List to store the nearest city and towns from JSON
+  List<String> townNames =
+      []; // List to store the nearest city and towns from JSON
+  String currentLocation = ''; // To store the nearest city name
   bool isLoading = true;
 
   @override
@@ -36,6 +38,7 @@ class _HomeTabState extends State<HomeTab> {
 
       // Combine nearest city with the towns from the JSON file
       setState(() {
+        currentLocation = nearestCity;
         townNames = [nearestCity, ...towns];
         isLoading = false;
       });
@@ -50,7 +53,8 @@ class _HomeTabState extends State<HomeTab> {
 
   // Load towns from the JSON file
   Future<List<String>> _loadTownsFromJson() async {
-    final String response = await rootBundle.loadString('assets/saved_towns.json');
+    final String response =
+        await rootBundle.loadString('assets/saved_towns.json');
     final data = json.decode(response);
     List<String> towns = List<String>.from(data['towns']);
     return towns;
@@ -73,14 +77,18 @@ class _HomeTabState extends State<HomeTab> {
         throw Exception('Location permissions are denied.');
       }
     }
-    
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
   }
 
   // Find the nearest city using Google Places API
   Future<String> _findNearestCity(Position position) async {
     final lat = position.latitude;
     final lon = position.longitude;
-    const apiKey = 'AIzaSyA69a-cGEZ16aiRkYjLfIBncs_QriDKiok'; // Replace with your API key
+    const apiKey =
+        'AIzaSyA69a-cGEZ16aiRkYjLfIBncs_QriDKiok'; // Replace with your API key
 
     final response = await http.get(Uri.parse(
         'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=50000&type=locality&key=$apiKey'));
@@ -104,14 +112,17 @@ class _HomeTabState extends State<HomeTab> {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20.0),
-      child: PageView.builder(
-        itemCount: townNames.length,
-        controller: PageController(viewportFraction: 0.8),
-        itemBuilder: (context, index) {
-          return TownCard(townName: townNames[index]);
-        },
-      ),
-    );
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: PageView.builder(
+              itemCount: townNames.length,
+              controller: PageController(viewportFraction: 0.8),
+              itemBuilder: (context, index) {
+                return TownCard(
+                  townName: townNames[index],
+                  currentLocation: currentLocation,
+                );
+              },
+            ),
+          );
   }
 }
