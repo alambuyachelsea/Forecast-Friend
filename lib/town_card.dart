@@ -22,7 +22,7 @@ class TownCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildLocationSection(),
-                _buildSection('Visual Summary'),
+                _buildVisualSection('25 °C', 'assets/media/sun_gif.gif'),
                 _buildSection('Verbal Summary'),
                 _buildSection('Hourly Info'),
                 _buildSection('Wind, UV, Humidity'),
@@ -72,20 +72,80 @@ class TownCard extends StatelessWidget {
                 opacity: 0.0, // Makes the icon fully transparent
                 child: Icon(
                   Icons.star_border, // Use the outlined star icon
-                  color: Colors.yellow,
                 ),
               ),
-          ],
+          ],  // Children
         ),
       ),
     );
   }
 
+
+  Widget _buildVisualSection(String title1, String gifAssetPath) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 135, // Set width for the first container
+            height: 120, // Set height for the first container
+            child: _buildSingleContainer(title1), // First container
+          ),
+          const SizedBox(width: 10), // Spacing between the two containers
+          Container(
+            width: 135, // Set width for the GIF container
+            height: 120, // Set height for the GIF container
+            child: _buildGifContainer(gifAssetPath), // Second container with GIF
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSingleContainer(String title) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.teal, width: 2),
+        color: Colors.teal.withOpacity(0.1),
+      ),
+      child: Center(
+        child: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
+            color: Colors.teal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGifContainer(String gifAssetPath) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.teal, width: 2),
+        color: Colors.teal.withOpacity(0.1),
+      ),
+      child: Center(
+        child: Image.asset(
+          gifAssetPath, // Path to your GIF asset
+          fit: BoxFit.cover, // Adjust the GIF to fit the container
+        ),
+      ),
+    );
+  }
+
+
   Widget _buildSection(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Container(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.teal, width: 2),
