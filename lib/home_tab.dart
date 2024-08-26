@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 import 'town_card.dart';
 
 class HomeTab extends StatefulWidget {
@@ -14,7 +15,7 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   List<String> townNames =
-      []; // List to store the nearest city and towns from JSON
+  []; // List to store the nearest city and towns from JSON
   String currentLocation = ''; // To store the nearest city name
   bool isLoading = true;
 
@@ -54,7 +55,7 @@ class _HomeTabState extends State<HomeTab> {
   // Load towns from the JSON file
   Future<List<String>> _loadTownsFromJson() async {
     final String response =
-        await rootBundle.loadString('assets/saved_towns.json');
+    await rootBundle.loadString('assets/saved_towns.json');
     final data = json.decode(response);
     List<String> towns = List<String>.from(data['towns']);
     return towns;
@@ -87,8 +88,11 @@ class _HomeTabState extends State<HomeTab> {
   Future<String> _findNearestCity(Position position) async {
     final lat = position.latitude;
     final lon = position.longitude;
-    const apiKey =
-        'AIzaSyA69a-cGEZ16aiRkYjLfIBncs_QriDKiok'; // Replace with your API key
+    final apiKey = dotenv.env['LOCATIONS_API_KEY']; // Fetch the API key from .env file
+
+    if (apiKey == null) {
+      throw Exception('API key not found in .env file');
+    }
 
     final response = await http.get(Uri.parse(
         'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=50000&type=locality&key=$apiKey'));
@@ -112,17 +116,17 @@ class _HomeTabState extends State<HomeTab> {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0),
-            child: PageView.builder(
-              itemCount: townNames.length,
-              controller: PageController(viewportFraction: 0.8),
-              itemBuilder: (context, index) {
-                return TownCard(
-                  townName: townNames[index],
-                  currentLocation: currentLocation,
-                );
-              },
-            ),
+      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      child: PageView.builder(
+        itemCount: townNames.length,
+        controller: PageController(viewportFraction: 0.8),
+        itemBuilder: (context, index) {
+          return TownCard(
+            townName: townNames[index],
+            currentLocation: currentLocation,
           );
+        },
+      ),
+    );
   }
 }

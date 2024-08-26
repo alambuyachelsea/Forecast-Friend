@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'home_tab.dart';
 import 'search_tab.dart';
 import 'about_tab.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import the flutter_dotenv package
 
-void main() {
+Future<void> main() async {
+  await dotenv.load();
   runApp(const MyApp());
 }
 
