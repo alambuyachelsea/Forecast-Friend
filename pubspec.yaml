@@ -60,6 +60,16 @@ flutter:
   assets:
     - assets/saved_towns.json
     - assets/media/sun_gif.gif
+    - assets/media/sun_img.png
+    - assets/media/cloudy_gif.gif
+    - assets/media/cloudy_img.png
+    - assets/media/fog_gif.gif
+    - assets/media/fog_img.png
+    - assets/media/rain_gif.gif
+    - assets/media/rain_img.png
+    - assets/media/snow_gif.gif
+    - assets/media/snow_img.png
+    - assets/media/windy_gif.gif
     - .env
 
   # The following line ensures that the Material Icons font is
