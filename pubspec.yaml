@@ -70,6 +70,7 @@ flutter:
     - assets/media/snow_gif.gif
     - assets/media/snow_img.png
     - assets/media/windy_gif.gif
+    - assets/media/windy_img.png
     - .env
 
   # The following line ensures that the Material Icons font is

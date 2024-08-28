@@ -1,11 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:math';
 
 class TownCard extends StatelessWidget {
   final String townName;
   final String currentLocation;
 
-  const TownCard(
-      {super.key, required this.townName, required this.currentLocation});
+  const TownCard({
+    super.key,
+    required this.townName,
+    required this.currentLocation,
+  });
+
+  Future<Map<String, dynamic>> fetchWeatherData(String town) async {
+    final apiKey = dotenv.env['OPENWEATHER_API_KEY'];  // Get the API key from the .env file
+    final url = Uri.parse(
+        'https://api.openweathermap.org/data/2.5/weather?q=$town&appid=$apiKey&units=metric');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load weather data');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +42,32 @@ class TownCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildLocationSection(),
-                _buildVisualSection('25 °C', 'assets/media/sun_gif.gif'),
-                _buildSection('Verbal Summary'),
+                FutureBuilder<Map<String, dynamic>>(
+                  future: fetchWeatherData(townName),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator(); // Show a loading indicator while fetching data
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else if (snapshot.hasData) {
+                      final weatherData = snapshot.data!;
+                      final temp = weatherData['main']['temp'];
+                      final roundedTemp = temp.floor(); // Round down the temperature
+                      final weatherDescription =
+                      weatherData['weather'][0]['description'];
+                      final iconCode = weatherData['weather'][0]['icon'];
+                      final gifPath = getGifForWeatherCondition(iconCode); // Get GIF path using the new method
+                      return Column(
+                        children: [
+                          _buildVisualSection('$roundedTemp °C', gifPath),
+                          _buildVerbalSection(weatherDescription, townName),
+                        ],
+                      );
+                    } else {
+                      return const Text('No data available');
+                    }
+                  },
+                ),
                 _buildSection('Hourly Info'),
                 _buildSection('Wind, UV, Humidity'),
                 _buildSection('Pollen & Driving Conditions'),
@@ -35,6 +79,8 @@ class TownCard extends StatelessWidget {
       ),
     );
   }
+
+
 
   Widget _buildLocationSection() {
     return Padding(
@@ -51,10 +97,9 @@ class TownCard extends StatelessWidget {
           children: [
             Icon(
               townName == currentLocation
-                  ? Icons
-                      .location_on // Filled icon if town matches current location
+                  ? Icons.location_on // Filled icon if town matches current location
                   : Icons
-                      .location_on_outlined, // Outlined icon if town doesn't match
+                  .location_on_outlined, // Outlined icon if town doesn't match
               color: Colors.teal,
             ),
             Text(
@@ -74,12 +119,11 @@ class TownCard extends StatelessWidget {
                   Icons.star_border, // Use the outlined star icon
                 ),
               ),
-          ],  // Children
+          ],
         ),
       ),
     );
   }
-
 
   Widget _buildVisualSection(String title1, String gifAssetPath) {
     return Padding(
@@ -140,7 +184,6 @@ class TownCard extends StatelessWidget {
     );
   }
 
-
   Widget _buildSection(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -162,6 +205,61 @@ class TownCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildVerbalSection(String weatherDescription, String town) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.teal, width: 2),
+          color: Colors.teal.withOpacity(0.1),
+        ),
+        child: Text(
+          'Current weather in $town: $weatherDescription',
+          style: const TextStyle(
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
+            color: Colors.teal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String getGifForWeatherCondition(String iconCode) {
+    switch (iconCode) {
+      case '01d': // Clear sky (day)
+      case '01n': // Clear sky (night)
+        return 'assets/media/sun_gif.gif';
+      case '02d': // Few clouds (day)
+      case '02n': // Few clouds (night)
+        return 'assets/media/cloudy_gif.gif';
+      case '03d': // Scattered clouds (day)
+      case '03n': // Scattered clouds (night)
+      case '04d': // Broken clouds (day)
+      case '04n': // Broken clouds (night)
+        return 'assets/media/cloudy_gif.gif';
+      case '09d': // Shower rain (day)
+      case '09n': // Shower rain (night)
+      case '10d': // Rain (day)
+      case '10n': // Rain (night)
+        return 'assets/media/rain_gif.gif';
+      case '11d': // Thunderstorm (day)
+      case '11n': // Thunderstorm (night)
+        return 'assets/media/rain_gif.gif';
+      case '13d': // Snow (day)
+      case '13n': // Snow (night)
+        return 'assets/media/snow_gif.gif';
+      case '50d': // Mist (day)
+      case '50n': // Mist (night)
+        return 'assets/media/mist_gif.gif';
+      default: // Default GIF if no match is found
+        return 'assets/media/default_gif.gif';
+    }
+  }
+
 }
 
 class ToggleStarButton extends StatefulWidget {
