@@ -1,8 +1,9 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:math';
 
 class TownCard extends StatelessWidget {
   final String townName;
@@ -15,12 +16,13 @@ class TownCard extends StatelessWidget {
   });
 
   Future<Map<String, dynamic>> fetchWeatherData(String town) async {
-    final apiKey = dotenv.env['OPENWEATHER_API_KEY'];  // Get the API key from the .env file
+    final apiKey = dotenv.env['OPEN_WEATHER_API_KEY'];  // Get the API key from the .env file
     final url = Uri.parse(
         'https://api.openweathermap.org/data/2.5/weather?q=$town&appid=$apiKey&units=metric');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
+      print(json.decode(response.body));
       return json.decode(response.body);
     } else {
       throw Exception('Failed to load weather data');
@@ -130,13 +132,13 @@ class TownCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Container(
+          SizedBox(
             width: 135, // Set width for the first container
             height: 120, // Set height for the first container
             child: _buildSingleContainer(title1), // First container
           ),
           const SizedBox(width: 10), // Spacing between the two containers
-          Container(
+          SizedBox(
             width: 135, // Set width for the GIF container
             height: 120, // Set height for the GIF container
             child: _buildGifContainer(gifAssetPath), // Second container with GIF
@@ -207,6 +209,9 @@ class TownCard extends StatelessWidget {
   }
 
   Widget _buildVerbalSection(String weatherDescription, String town) {
+
+    String weatherCondition = weatherDescription.capitalize();
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Container(
@@ -217,7 +222,8 @@ class TownCard extends StatelessWidget {
           color: Colors.teal.withOpacity(0.1),
         ),
         child: Text(
-          'Current weather in $town: $weatherDescription',
+
+          'Current Conditions: $weatherCondition',
           style: const TextStyle(
             fontSize: 20.0,
             fontWeight: FontWeight.bold,
@@ -231,35 +237,44 @@ class TownCard extends StatelessWidget {
   String getGifForWeatherCondition(String iconCode) {
     switch (iconCode) {
       case '01d': // Clear sky (day)
-      case '01n': // Clear sky (night)
         return 'assets/media/sun_gif.gif';
+      case '01n': // Clear sky (night)
+        return 'assets/media/clear_night.gif';
       case '02d': // Few clouds (day)
-      case '02n': // Few clouds (night)
-        return 'assets/media/cloudy_gif.gif';
       case '03d': // Scattered clouds (day)
-      case '03n': // Scattered clouds (night)
       case '04d': // Broken clouds (day)
-      case '04n': // Broken clouds (night)
         return 'assets/media/cloudy_gif.gif';
+      case '02n': // Few clouds (night)
+      case '03n': // Scattered clouds (night)
+      case '04n': // Broken clouds (night)
+        return 'assets/media/night_clouds.gif';
       case '09d': // Shower rain (day)
-      case '09n': // Shower rain (night)
-      case '10d': // Rain (day)
-      case '10n': // Rain (night)
-        return 'assets/media/rain_gif.gif';
       case '11d': // Thunderstorm (day)
+      case '10d': // Rain (day)
+      return 'assets/media/rain_gif.gif';
+      case '09n': // Shower rain (night)
       case '11n': // Thunderstorm (night)
-        return 'assets/media/rain_gif.gif';
+      case '10n': // Rain (night)
+        return 'assets/media/night_rain.gif';
       case '13d': // Snow (day)
-      case '13n': // Snow (night)
         return 'assets/media/snow_gif.gif';
+      case '13n': // Snow (night)
+        return 'assets/media/night_snow.gif';
       case '50d': // Mist (day)
+        return 'assets/media/fog_gif.gif';
       case '50n': // Mist (night)
-        return 'assets/media/mist_gif.gif';
+        return 'assets/media/night_fog.gif';
       default: // Default GIF if no match is found
         return 'assets/media/default_gif.gif';
     }
   }
 
+}
+
+extension StringExtensions on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${this.substring(1)}";
+  }
 }
 
 class ToggleStarButton extends StatefulWidget {
