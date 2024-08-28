@@ -71,6 +71,11 @@ flutter:
     - assets/media/snow_img.png
     - assets/media/windy_gif.gif
     - assets/media/windy_img.png
+    - assets/media/clear_night.gif
+    - assets/media/night_clouds.gif
+    - assets/media/night_rain.gif
+    - assets/media/night_snow.gif
+    - assets/media/night_fog.gif
     - .env
 
   # The following line ensures that the Material Icons font is
