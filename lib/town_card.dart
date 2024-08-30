@@ -115,9 +115,33 @@ class TownCard extends StatelessWidget {
                       return Column(
                         children: [
                           _buildVisualSection('$roundedTemp °C', gifPath),
-                          _buildVerbalSection(weatherDescription, town.name),
-                          _buildWindHumiditySection(weatherData),
+                          // Row for Verbal Summary and UV Index with even spacing
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildVerbalSection(weatherDescription, town.name),
+                              ),
+                              const SizedBox(width: 10), // Spacing between sections
+                              Expanded(
+                                child: FutureBuilder<double>(
+                                  future: fetchUVIndex(town.latitude, town.longitude),
+                                  builder: (context, uvSnapshot) {
+                                    if (uvSnapshot.connectionState == ConnectionState.waiting) {
+                                      return const CircularProgressIndicator(); // Show loading indicator for UV data
+                                    } else if (uvSnapshot.hasError) {
+                                      return Text('Error loading UV index: ${uvSnapshot.error}');
+                                    } else if (uvSnapshot.hasData) {
+                                      return _buildUVIndexSection(uvSnapshot.data!);
+                                    } else {
+                                      return const Text('No UV data available');
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                           _buildVisibilityPressureSection(weatherData),
+                          _buildWindHumiditySection(weatherData),
                         ],
                       );
                     } else {
@@ -126,7 +150,7 @@ class TownCard extends StatelessWidget {
                   },
                 ),
                 _buildSection('Hourly Info'),
-                _buildSection('Pollen & UV'),
+                _buildSection('Pollen & Driving Conditions'),
                 _buildSection('Weekly Forecast'),
               ],
             ),
@@ -135,6 +159,9 @@ class TownCard extends StatelessWidget {
       ),
     );
   }
+
+
+
 
 
   Widget _buildLocationSection() {
@@ -275,7 +302,7 @@ class TownCard extends StatelessWidget {
         child: Text(
           'Current Conditions: $weatherCondition',
           style: const TextStyle(
-            fontSize: 20.0,
+            fontSize: 16.0,
             fontWeight: FontWeight.bold,
             color: Colors.teal,
           ),
@@ -436,8 +463,45 @@ class TownCard extends StatelessWidget {
     );
   }
 
+  // Method to fetch UV index data using latitude and longitude
+  Future<double> fetchUVIndex(double lat, double lon) async {
+    final apiKey = dotenv.env['OPEN_WEATHER_API_KEY']; // Ensure the API key is loaded from the .env file
+    final url = Uri.parse(
+      'https://api.openweathermap.org/data/2.5/uvi?lat=$lat&lon=$lon&appid=$apiKey',
+    );
 
+    final response = await http.get(url);
 
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['value']?.toDouble() ?? 0.0; // Return the UV index value or 0.0 if not found
+    } else {
+      throw Exception('Failed to load UV index data');
+    }
+  }
+
+  // Method to build UV index section
+  Widget _buildUVIndexSection(double uvIndex) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.teal, width: 2),
+          color: Colors.teal.withOpacity(0.1),
+        ),
+        child: Text(
+          'UV Index: ${uvIndex.toStringAsFixed(1)}',
+          style: const TextStyle(
+            fontSize: 16.0,
+            fontWeight: FontWeight.bold,
+            color: Colors.teal,
+          ),
+        ),
+      ),
+    );
+  }
 
   String getGifForWeatherCondition(String iconCode) {
     switch (iconCode) {
