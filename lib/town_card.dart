@@ -1,24 +1,63 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/services.dart'; // For rootBundle
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class TownCard extends StatelessWidget {
-  final String townName;
-  final String currentLocation;
+// Define the Town model class
+class Town {
+  final String name;
+  final double latitude;
+  final double longitude;
+  final String country;
+  final bool currentLocation;
 
-  const TownCard({
-    super.key,
-    required this.townName,
+  Town({
+    required this.name,
+    required this.latitude,
+    required this.longitude,
+    required this.country,
     required this.currentLocation,
   });
 
-  Future<Map<String, dynamic>> fetchWeatherData(String town) async {
+  // Factory method to create a Town object from JSON
+  factory Town.fromJson(Map<String, dynamic> json) {
+    return Town(
+      name: json['name'],
+      latitude: json['latitude'].toDouble(),
+      longitude: json['longitude'].toDouble(),
+      country: json['country'],
+      currentLocation: json['currentLocation'],
+    );
+  }
+
+  @override
+  String toString() {
+    return 'Town Details:\n'
+        'Name: $name\n'
+        'Latitude: $latitude\n'
+        'Longitude: $longitude\n'
+        'Country: $country\n'
+        'Current Location: $currentLocation';
+  }
+}
+
+// Define the TownCard widget
+class TownCard extends StatelessWidget {
+  final Town town;
+  final bool isCurrentLocation;
+
+  const TownCard({
+    super.key,
+    required this.town,
+    required this.isCurrentLocation,
+  });
+
+  // Fetch weather data from OpenWeatherMap API
+  Future<Map<String, dynamic>> fetchWeatherData(String townName) async {
     final apiKey = dotenv.env['OPEN_WEATHER_API_KEY'];  // Get the API key from the .env file
     final url = Uri.parse(
-        'https://api.openweathermap.org/data/2.5/weather?q=$town&appid=$apiKey&units=metric');
+        'https://api.openweathermap.org/data/2.5/weather?q=$townName&appid=$apiKey&units=metric');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -27,6 +66,19 @@ class TownCard extends StatelessWidget {
     } else {
       throw Exception('Failed to load weather data');
     }
+  }
+
+  // Load towns from JSON file
+  Future<List<Town>> loadTownsFromJson() async {
+    final String response = await rootBundle.loadString('assets/saved_towns.json');
+    final data = json.decode(response);
+
+    // Ensure the JSON data is correctly structured
+    List<Town> towns = List<Town>.from(
+        data['towns'].map((town) => Town.fromJson(town))
+    );
+
+    return towns;
   }
 
   @override
@@ -45,7 +97,7 @@ class TownCard extends StatelessWidget {
               children: [
                 _buildLocationSection(),
                 FutureBuilder<Map<String, dynamic>>(
-                  future: fetchWeatherData(townName),
+                  future: fetchWeatherData(town.name),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const CircularProgressIndicator(); // Show a loading indicator while fetching data
@@ -55,14 +107,14 @@ class TownCard extends StatelessWidget {
                       final weatherData = snapshot.data!;
                       final temp = weatherData['main']['temp'];
                       final roundedTemp = temp.floor(); // Round down the temperature
-                      final weatherDescription =
-                      weatherData['weather'][0]['description'];
+                      final weatherDescription = weatherData['weather'][0]['description'];
                       final iconCode = weatherData['weather'][0]['icon'];
                       final gifPath = getGifForWeatherCondition(iconCode); // Get GIF path using the new method
                       return Column(
                         children: [
                           _buildVisualSection('$roundedTemp °C', gifPath),
-                          _buildVerbalSection(weatherDescription, townName),
+                          _buildVerbalSection(weatherDescription, town.name),
+                          _buildWindHumiditySection(weatherData), // Add the Wind and Humidity section here
                         ],
                       );
                     } else {
@@ -71,7 +123,6 @@ class TownCard extends StatelessWidget {
                   },
                 ),
                 _buildSection('Hourly Info'),
-                _buildSection('Wind, UV, Humidity'),
                 _buildSection('Pollen & Driving Conditions'),
                 _buildSection('Weekly Forecast'),
               ],
@@ -81,7 +132,6 @@ class TownCard extends StatelessWidget {
       ),
     );
   }
-
 
 
   Widget _buildLocationSection() {
@@ -98,27 +148,24 @@ class TownCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Icon(
-              townName == currentLocation
-                  ? Icons.location_on // Filled icon if town matches current location
-                  : Icons
-                  .location_on_outlined, // Outlined icon if town doesn't match
+              isCurrentLocation ? Icons.location_on : Icons.location_on_outlined,
               color: Colors.teal,
             ),
             Text(
-              townName,
+              town.name,
               style: const TextStyle(
                 fontSize: 24.0,
                 fontWeight: FontWeight.bold,
                 color: Colors.teal,
               ),
             ),
-            if (townName != currentLocation)
+            if (!isCurrentLocation)
               const ToggleStarButton()
             else
               const Opacity(
                 opacity: 0.0, // Makes the icon fully transparent
                 child: Icon(
-                  Icons.star_border, // Use the outlined star icon
+                  Icons.star_border,
                 ),
               ),
           ],
@@ -208,10 +255,8 @@ class TownCard extends StatelessWidget {
     );
   }
 
-  Widget _buildVerbalSection(String weatherDescription, String town) {
-
+  Widget _buildVerbalSection(String weatherDescription, String townName) {
     String weatherCondition = weatherDescription.capitalize();
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Container(
@@ -222,7 +267,6 @@ class TownCard extends StatelessWidget {
           color: Colors.teal.withOpacity(0.1),
         ),
         child: Text(
-
           'Current Conditions: $weatherCondition',
           style: const TextStyle(
             fontSize: 20.0,
@@ -230,6 +274,31 @@ class TownCard extends StatelessWidget {
             color: Colors.teal,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildWindHumiditySection(Map<String, dynamic> weatherData) {
+    final windSpeed = weatherData['wind']['speed'];
+    final humidity = weatherData['main']['humidity'];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Expanded(
+            child: _buildSingleContainer(
+              'Wind Speed: ${windSpeed.toStringAsFixed(1)} m/s',
+            ),
+          ),
+          const SizedBox(width: 10), // Spacing between the two containers
+          Expanded(
+            child: _buildSingleContainer(
+              'Humidity: ${humidity.toStringAsFixed(0)}%',
+            ),
+          ),
+        ],
       ),
     );
   }
