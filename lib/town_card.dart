@@ -299,17 +299,31 @@ class TownCard extends StatelessWidget {
           border: Border.all(color: Colors.teal, width: 2),
           color: Colors.teal.withOpacity(0.1),
         ),
-        child: Text(
-          'Current Conditions: $weatherCondition',
-          style: const TextStyle(
-            fontSize: 16.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.teal,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              'Current Conditions',
+              style: TextStyle(
+                fontSize: 12.0,
+                color: Colors.teal,
+              ),
+            ),
+            Text(
+              weatherCondition,
+              style: const TextStyle(
+                fontSize: 14.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.teal,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
+
 
   Widget _buildWindHumiditySection(Map<String, dynamic> weatherData) {
     final windSpeed = weatherData['wind']['speed'];
@@ -334,15 +348,14 @@ class TownCard extends StatelessWidget {
                   const Text(
                     'Wind Speed',
                     style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 12.0,
                       color: Colors.teal,
                     ),
                   ),
                   Text(
                     '${windSpeed.toStringAsFixed(1)} m/s',
                     style: const TextStyle(
-                      fontSize: 20.0,
+                      fontSize: 12.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.teal,
                     ),
@@ -366,15 +379,14 @@ class TownCard extends StatelessWidget {
                   const Text(
                     'Humidity',
                     style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 12.0,
                       color: Colors.teal,
                     ),
                   ),
                   Text(
                     '${humidity.toStringAsFixed(0)}%',
                     style: const TextStyle(
-                      fontSize: 20.0,
+                      fontSize: .0,
                       fontWeight: FontWeight.bold,
                       color: Colors.teal,
                     ),
@@ -411,8 +423,7 @@ class TownCard extends StatelessWidget {
                   const Text(
                     'Visibility',
                     style: TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 12.0,
                       color: Colors.teal,
                     ),
                   ),
@@ -420,6 +431,7 @@ class TownCard extends StatelessWidget {
                     '${visibility.toStringAsFixed(1)} km',
                     style: const TextStyle(
                       fontSize: 14.0,
+                      fontWeight: FontWeight.bold,
                       color: Colors.teal,
                     ),
                   ),
@@ -442,8 +454,7 @@ class TownCard extends StatelessWidget {
                   const Text(
                     'Pressure',
                     style: TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 12.0,
                       color: Colors.teal,
                     ),
                   ),
@@ -451,6 +462,7 @@ class TownCard extends StatelessWidget {
                     '${pressure.toString()} hPa',
                     style: const TextStyle(
                       fontSize: 14.0,
+                      fontWeight: FontWeight.bold,
                       color: Colors.teal,
                     ),
                   ),
@@ -480,7 +492,7 @@ class TownCard extends StatelessWidget {
     }
   }
 
-  // Method to build UV index section
+// Method to build UV index section
   Widget _buildUVIndexSection(double uvIndex) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -491,17 +503,30 @@ class TownCard extends StatelessWidget {
           border: Border.all(color: Colors.teal, width: 2),
           color: Colors.teal.withOpacity(0.1),
         ),
-        child: Text(
-          'UV Index: ${uvIndex.toStringAsFixed(1)}',
-          style: const TextStyle(
-            fontSize: 16.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.teal,
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'UV Index',
+              style: TextStyle(
+                fontSize: 12.0,
+                color: Colors.teal,
+              ),
+            ),
+            Text(
+              uvIndex.toStringAsFixed(1),
+              style: const TextStyle(
+                fontSize: 14.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.teal,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
 
   String getGifForWeatherCondition(String iconCode) {
     switch (iconCode) {
