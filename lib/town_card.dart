@@ -3,44 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart'; // For rootBundle
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'town.dart';
 
-// Define the Town model class
-class Town {
-  final String name;
-  final double latitude;
-  final double longitude;
-  final String country;
-  final bool currentLocation;
-
-  Town({
-    required this.name,
-    required this.latitude,
-    required this.longitude,
-    required this.country,
-    required this.currentLocation,
-  });
-
-  // Factory method to create a Town object from JSON
-  factory Town.fromJson(Map<String, dynamic> json) {
-    return Town(
-      name: json['name'],
-      latitude: json['latitude'].toDouble(),
-      longitude: json['longitude'].toDouble(),
-      country: json['country'],
-      currentLocation: json['currentLocation'],
-    );
-  }
-
-  @override
-  String toString() {
-    return 'Town Details:\n'
-        'Name: $name\n'
-        'Latitude: $latitude\n'
-        'Longitude: $longitude\n'
-        'Country: $country\n'
-        'Current Location: $currentLocation';
-  }
-}
 
 // Define the TownCard widget
 class TownCard extends StatelessWidget {
