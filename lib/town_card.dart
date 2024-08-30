@@ -55,7 +55,8 @@ class TownCard extends StatelessWidget {
 
   // Fetch weather data from OpenWeatherMap API
   Future<Map<String, dynamic>> fetchWeatherData(String townName) async {
-    final apiKey = dotenv.env['OPEN_WEATHER_API_KEY'];  // Get the API key from the .env file
+    final apiKey = dotenv
+        .env['OPEN_WEATHER_API_KEY']; // Get the API key from the .env file
     final url = Uri.parse(
         'https://api.openweathermap.org/data/2.5/weather?q=$townName&appid=$apiKey&units=metric');
     final response = await http.get(url);
@@ -70,13 +71,13 @@ class TownCard extends StatelessWidget {
 
   // Load towns from JSON file
   Future<List<Town>> loadTownsFromJson() async {
-    final String response = await rootBundle.loadString('assets/saved_towns.json');
+    final String response =
+        await rootBundle.loadString('assets/saved_towns.json');
     final data = json.decode(response);
 
     // Ensure the JSON data is correctly structured
-    List<Town> towns = List<Town>.from(
-        data['towns'].map((town) => Town.fromJson(town))
-    );
+    List<Town> towns =
+        List<Town>.from(data['towns'].map((town) => Town.fromJson(town)));
 
     return towns;
   }
@@ -106,15 +107,19 @@ class TownCard extends StatelessWidget {
                     } else if (snapshot.hasData) {
                       final weatherData = snapshot.data!;
                       final temp = weatherData['main']['temp'];
-                      final roundedTemp = temp.floor(); // Round down the temperature
-                      final weatherDescription = weatherData['weather'][0]['description'];
+                      final roundedTemp =
+                          temp.floor(); // Round down the temperature
+                      final weatherDescription =
+                          weatherData['weather'][0]['description'];
                       final iconCode = weatherData['weather'][0]['icon'];
-                      final gifPath = getGifForWeatherCondition(iconCode); // Get GIF path using the new method
+                      final gifPath = getGifForWeatherCondition(
+                          iconCode); // Get GIF path using the new method
                       return Column(
                         children: [
                           _buildVisualSection('$roundedTemp °C', gifPath),
                           _buildVerbalSection(weatherDescription, town.name),
-                          _buildWindHumiditySection(weatherData), // Add the Wind and Humidity section here
+                          _buildWindHumiditySection(
+                              weatherData), // Add the Wind and Humidity section here
                         ],
                       );
                     } else {
@@ -133,7 +138,6 @@ class TownCard extends StatelessWidget {
     );
   }
 
-
   Widget _buildLocationSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -148,7 +152,9 @@ class TownCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Icon(
-              isCurrentLocation ? Icons.location_on : Icons.location_on_outlined,
+              isCurrentLocation
+                  ? Icons.location_on
+                  : Icons.location_on_outlined,
               color: Colors.teal,
             ),
             Text(
@@ -188,7 +194,8 @@ class TownCard extends StatelessWidget {
           SizedBox(
             width: 135, // Set width for the GIF container
             height: 120, // Set height for the GIF container
-            child: _buildGifContainer(gifAssetPath), // Second container with GIF
+            child:
+                _buildGifContainer(gifAssetPath), // Second container with GIF
           ),
         ],
       ),
@@ -288,14 +295,66 @@ class TownCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Expanded(
-            child: _buildSingleContainer(
-              'Wind Speed: ${windSpeed.toStringAsFixed(1)} m/s',
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.teal, width: 2),
+                color: Colors.teal.withOpacity(0.1),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Wind Speed',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                  Text(
+                    '${windSpeed.toStringAsFixed(1)} m/s',
+                    style: const TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 10), // Spacing between the two containers
           Expanded(
-            child: _buildSingleContainer(
-              'Humidity: ${humidity.toStringAsFixed(0)}%',
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.teal, width: 2),
+                color: Colors.teal.withOpacity(0.1),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Humidity',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                  Text(
+                    '${humidity.toStringAsFixed(0)}%',
+                    style: const TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -320,7 +379,7 @@ class TownCard extends StatelessWidget {
       case '09d': // Shower rain (day)
       case '11d': // Thunderstorm (day)
       case '10d': // Rain (day)
-      return 'assets/media/rain_gif.gif';
+        return 'assets/media/rain_gif.gif';
       case '09n': // Shower rain (night)
       case '11n': // Thunderstorm (night)
       case '10n': // Rain (night)
@@ -337,7 +396,6 @@ class TownCard extends StatelessWidget {
         return 'assets/media/default_gif.gif';
     }
   }
-
 }
 
 extension StringExtensions on String {
@@ -371,7 +429,8 @@ class _ToggleStarButtonState extends State<ToggleStarButton> {
             : Icons.star_border, // Use filled or outlined icon based on state
         color: Colors.yellow,
       ),
-      onPressed: _toggleIcon, // Toggle the icon when pressed remove or add city to list
+      onPressed:
+          _toggleIcon, // Toggle the icon when pressed remove or add city to list
     );
   }
 }
