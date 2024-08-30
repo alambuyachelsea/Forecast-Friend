@@ -13,7 +13,16 @@ class Town {
     required this.currentLocation,
   });
 
-  // Method to write the details of the town to a string
+  factory Town.fromJson(Map<String, dynamic> json) {
+    return Town(
+      name: json['name'],
+      latitude: json['latitude'].toDouble(),
+      longitude: json['longitude'].toDouble(),
+      country: json['country'],
+      currentLocation: json['currentLocation'],
+    );
+  }
+
   @override
   String toString() {
     return 'Town Details:\n'
