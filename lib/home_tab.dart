@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
-import 'town_card.dart';
+import 'town_card.dart'; // Make sure this import matches the location of your TownCard file
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -14,8 +14,7 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  List<String> townNames =
-  []; // List to store the nearest city and towns from JSON
+  List<Town> towns = []; // List to store the towns from JSON
   String currentLocation = ''; // To store the nearest city name
   bool isLoading = true;
 
@@ -28,8 +27,8 @@ class _HomeTabState extends State<HomeTab> {
   Future<void> loadTownsAndFetchNearestCity() async {
     try {
       // Load towns from JSON file
-      List<String> towns = await _loadTownsFromJson();
-      print('Loaded towns from JSON: $towns');
+      List<Town> loadedTowns = await _loadTownsFromJson();
+      print('Loaded towns from JSON: $loadedTowns');
 
       // Fetch nearest city
       Position position = await _getCurrentLocation();
@@ -40,24 +39,43 @@ class _HomeTabState extends State<HomeTab> {
       // Combine nearest city with the towns from the JSON file
       setState(() {
         currentLocation = nearestCity;
-        townNames = [nearestCity, ...towns];
+        towns = [
+          Town(
+            name: nearestCity,
+            latitude: position.latitude,
+            longitude: position.longitude,
+            country: 'Unknown', // Update this as needed
+            currentLocation: true,
+          ),
+          ...loadedTowns
+        ];
         isLoading = false;
       });
     } catch (e) {
       print('Error: $e');
       setState(() {
-        townNames = ['Error finding nearest city or loading towns'];
+        towns = [
+          Town(
+            name: 'Error finding nearest city or loading towns',
+            latitude: 0,
+            longitude: 0,
+            country: 'Unknown',
+            currentLocation: false,
+          )
+        ];
         isLoading = false;
       });
     }
   }
 
   // Load towns from the JSON file
-  Future<List<String>> _loadTownsFromJson() async {
-    final String response =
-    await rootBundle.loadString('assets/saved_towns.json');
+  Future<List<Town>> _loadTownsFromJson() async {
+    final String response = await rootBundle.loadString('assets/saved_towns.json');
     final data = json.decode(response);
-    List<String> towns = List<String>.from(data['towns']);
+    List<dynamic> townList = data['towns'];
+
+    // Convert the JSON list to a List of Town objects
+    List<Town> towns = townList.map((townJson) => Town.fromJson(townJson)).toList();
     return towns;
   }
 
@@ -118,12 +136,13 @@ class _HomeTabState extends State<HomeTab> {
         : Padding(
       padding: const EdgeInsets.symmetric(vertical: 20.0),
       child: PageView.builder(
-        itemCount: townNames.length,
+        itemCount: towns.length,
         controller: PageController(viewportFraction: 0.8),
         itemBuilder: (context, index) {
+          final town = towns[index];
           return TownCard(
-            townName: townNames[index],
-            currentLocation: currentLocation,
+            town: town,
+            isCurrentLocation: town.name == currentLocation,
           );
         },
       ),
