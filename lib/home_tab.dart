@@ -6,7 +6,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 import 'town_card.dart'; // Make sure this import matches the location of your TownCard file
-import 'town.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
