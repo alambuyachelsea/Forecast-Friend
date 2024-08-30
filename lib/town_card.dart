@@ -18,7 +18,7 @@ class TownCard extends StatelessWidget {
   });
 
   // Fetch weather data from OpenWeatherMap API
-  Future<Map<String, dynamic>> fetchWeatherData(String townName) async {
+  Future<Map<String, dynamic>> fetchCurrentWeatherData(String townName) async {
     final apiKey = dotenv.env['OPEN_WEATHER_API_KEY']; // Get the API key from the .env file
     final url = Uri.parse(
         'https://api.openweathermap.org/data/2.5/weather?q=$townName&appid=$apiKey&units=metric');
@@ -30,6 +30,35 @@ class TownCard extends StatelessWidget {
       throw Exception('Failed to load weather data');
     }
   }
+
+  Future<Map<String, dynamic>> fetchHourlyForecastData(String townName) async {
+    final apiKey = dotenv.env['OPEN_WEATHER_API_KEY'];
+    final url = Uri.parse(
+        'https://api.openweathermap.org/data/2.5/forecast?q=$townName&appid=$apiKey&units=metric'
+    );
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load hourly forecast data');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetch5DayForecastData(String townName) async {
+    final apiKey = dotenv.env['OPEN_WEATHER_API_KEY'];
+    final url = Uri.parse(
+        'https://api.openweathermap.org/data/2.5/forecast?q=$townName&appid=$apiKey&units=metric'
+    );
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load 5-day forecast data');
+    }
+  }
+
 
   // Load towns from JSON file
   Future<List<Town>> loadTownsFromJson() async {
@@ -58,7 +87,7 @@ class TownCard extends StatelessWidget {
               children: [
                 _buildLocationSection(),
                 FutureBuilder<Map<String, dynamic>>(
-                  future: fetchWeatherData(town.name),
+                  future: fetchCurrentWeatherData(town.name),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator()); // Centered loading indicator
@@ -67,52 +96,80 @@ class TownCard extends StatelessWidget {
                     } else if (snapshot.hasData) {
                       final weatherData = snapshot.data!;
                       final temp = weatherData['main']['temp'];
-                      final tempMin = weatherData['main']['temp_min']; // Fetch minimum temperature
-                      final tempMax = weatherData['main']['temp_max']; // Fetch maximum temperature
-                      final roundedTemp = temp.floor(); // Round down the temperature
-                      final roundedTempMin = tempMin.floor(); // Round down the minimum temperature
-                      final roundedTempMax = tempMax.floor(); // Round down the maximum temperature
+                      final tempMin = weatherData['main']['temp_min'];
+                      final tempMax = weatherData['main']['temp_max'];
+                      final roundedTemp = temp.floor();
+                      final roundedTempMin = tempMin.floor();
+                      final roundedTempMax = tempMax.floor();
                       final weatherDescription = weatherData['weather'][0]['description'];
                       final iconCode = weatherData['weather'][0]['icon'];
-                      final gifPath = getGifForWeatherCondition(iconCode); // Get GIF path using the new method
+                      final gifPath = getGifForWeatherCondition(iconCode);
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildVisualSection(roundedTemp, roundedTempMin, roundedTempMax, gifPath),
+                          _buildVisibilityPressureSection(weatherData),
+                          _buildWindHumiditySection(weatherData),
                           Row(
                             children: [
                               Expanded(
                                 child: _buildVerbalSection(weatherDescription, town.name),
                               ),
-                              const SizedBox(width: 10), // Spacing between sections
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: FutureBuilder<double>(
                                   future: fetchUVIndex(town.latitude, town.longitude),
                                   builder: (context, uvSnapshot) {
                                     if (uvSnapshot.connectionState == ConnectionState.waiting) {
-                                      return const Center(child: CircularProgressIndicator()); // Centered loading indicator for UV data
+                                      return const Center(child: CircularProgressIndicator());
                                     } else if (uvSnapshot.hasError) {
-                                      return Center(child: Text('Error loading UV index: ${uvSnapshot.error}')); // Centered error message for UV data
+                                      return Center(child: Text('Error loading UV index: ${uvSnapshot.error}'));
                                     } else if (uvSnapshot.hasData) {
                                       return _buildUVIndexSection(uvSnapshot.data!);
                                     } else {
-                                      return const Center(child: Text('No UV data available')); // Centered message for no UV data
+                                      return const Center(child: Text('No UV data available'));
                                     }
                                   },
                                 ),
                               ),
                             ],
                           ),
-                          _buildVisibilityPressureSection(weatherData),
-                          _buildWindHumiditySection(weatherData),
-                          _buildSection('Hourly Info'),
-                          _buildSection('Pollen & Driving Conditions'),
-                          _buildSection('Weekly Forecast'),
+                          FutureBuilder<Map<String, dynamic>>(
+                            future: fetchHourlyForecastData(town.name),
+                            builder: (context, hourlySnapshot) {
+                              if (hourlySnapshot.connectionState == ConnectionState.waiting) {
+                                return const Center(child: CircularProgressIndicator());
+                              } else if (hourlySnapshot.hasError) {
+                                return Center(child: Text('Error: ${hourlySnapshot.error}'));
+                              } else if (hourlySnapshot.hasData) {
+                                final hourlyData = hourlySnapshot.data!['list'];
+                                final hourlyForecastData = hourlyData.take(8).toList();
+                                return _buildHourlyForecastSection(hourlyForecastData);
+                              } else {
+                                return const Center(child: Text('No hourly forecast data available'));
+                              }
+                            },
+                          ),
+                          FutureBuilder<Map<String, dynamic>>(
+                            future: fetch5DayForecastData(town.name),
+                            builder: (context, forecastSnapshot) {
+                              if (forecastSnapshot.connectionState == ConnectionState.waiting) {
+                                return const Center(child: CircularProgressIndicator());
+                              } else if (forecastSnapshot.hasError) {
+                                return Center(child: Text('Error: ${forecastSnapshot.error}'));
+                              } else if (forecastSnapshot.hasData) {
+                                final forecastData = forecastSnapshot.data!;
+                                return _build5DayForecastSection(forecastData);
+                              } else {
+                                return const Center(child: Text('No 5-day forecast data available'));
+                              }
+                            },
+                          ),
                         ],
                       );
                     } else {
-                      return const Center(child: Text('No data available')); // Centered message for no data
+                      return const Center(child: Text('No data available'));
                     }
                   },
                 ),
@@ -123,6 +180,7 @@ class TownCard extends StatelessWidget {
       ),
     );
   }
+
 
   Widget _buildSection(String title) {
     return Padding(
@@ -498,6 +556,151 @@ class TownCard extends StatelessWidget {
     );
   }
 
+  Widget _buildHourlyForecastSection(List<dynamic> hourlyData) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.teal, width: 2),
+          color: Colors.teal.withOpacity(0.1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Hourly Forecast',
+              style: TextStyle(
+                fontSize: 14.0,
+                color: Colors.teal,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Column(
+              children: hourlyData.map<Widget>((hourData) {
+                final time = DateTime.fromMillisecondsSinceEpoch(hourData['dt'] * 1000);
+                final temp = hourData['main']['temp'];
+                final weatherIcon = hourData['weather'][0]['icon'];
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    children: [
+                      Text(
+                        '${time.hour}:00',
+                        style: const TextStyle(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.teal,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Image.network(
+                        'http://openweathermap.org/img/wn/$weatherIcon.png',
+                        width: 40,
+                        height: 40,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        '${temp.toStringAsFixed(1)}°C',
+                        style: const TextStyle(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.teal,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _build5DayForecastSection(Map<String, dynamic> forecastData) {
+    // Ensure forecastData contains 'list' and it's a List
+    if (forecastData['list'] is List) {
+      final dailyForecasts = forecastData['list'] as List<dynamic>;
+
+      // Filter to get daily summaries (assuming data contains 'dt_txt' field)
+      final filteredForecasts = dailyForecasts.where((entry) {
+        return entry['dt_txt'] != null && entry['dt_txt'].contains('12:00:00');
+      }).toList();
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.teal, width: 2),
+            color: Colors.teal.withOpacity(0.1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '5-Day Forecast',
+                style: TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.teal,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Column(
+                children: filteredForecasts.map<Widget>((dailyData) {
+                  final date = DateTime.fromMillisecondsSinceEpoch(dailyData['dt'] * 1000);
+                  final temp = dailyData['main']['temp'] as double;
+                  final weatherIcon = dailyData['weather'][0]['icon'] as String;
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Row(
+                      children: [
+                        Text(
+                          '${date.day}/${date.month}/${date.year}',
+                          style: const TextStyle(
+                            fontSize: 14.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Image.network(
+                          'http://openweathermap.org/img/wn/$weatherIcon.png',
+                          width: 40,
+                          height: 40,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${temp.toStringAsFixed(1)}°C',
+                          style: const TextStyle(
+                            fontSize: 14.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return const Center(child: Text('No valid forecast data available'));
+    }
+  }
+
+
+
   String getGifForWeatherCondition(String iconCode) {
     switch (iconCode) {
       case '01d': // Clear sky (day)
@@ -536,7 +739,7 @@ class TownCard extends StatelessWidget {
 
 extension StringExtensions on String {
   String capitalize() {
-    return "${this[0].toUpperCase()}${this.substring(1)}";
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }
 
