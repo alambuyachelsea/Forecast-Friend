@@ -107,19 +107,17 @@ class TownCard extends StatelessWidget {
                     } else if (snapshot.hasData) {
                       final weatherData = snapshot.data!;
                       final temp = weatherData['main']['temp'];
-                      final roundedTemp =
-                          temp.floor(); // Round down the temperature
-                      final weatherDescription =
-                          weatherData['weather'][0]['description'];
+                      final roundedTemp = temp.floor(); // Round down the temperature
+                      final weatherDescription = weatherData['weather'][0]['description'];
                       final iconCode = weatherData['weather'][0]['icon'];
-                      final gifPath = getGifForWeatherCondition(
-                          iconCode); // Get GIF path using the new method
+                      final gifPath = getGifForWeatherCondition(iconCode); // Get GIF path using the new method
+
                       return Column(
                         children: [
                           _buildVisualSection('$roundedTemp °C', gifPath),
                           _buildVerbalSection(weatherDescription, town.name),
-                          _buildWindHumiditySection(
-                              weatherData), // Add the Wind and Humidity section here
+                          _buildWindHumiditySection(weatherData),
+                          _buildVisibilityPressureSection(weatherData),
                         ],
                       );
                     } else {
@@ -128,7 +126,7 @@ class TownCard extends StatelessWidget {
                   },
                 ),
                 _buildSection('Hourly Info'),
-                _buildSection('Pollen & Driving Conditions'),
+                _buildSection('Pollen & UV'),
                 _buildSection('Weekly Forecast'),
               ],
             ),
@@ -137,6 +135,7 @@ class TownCard extends StatelessWidget {
       ),
     );
   }
+
 
   Widget _buildLocationSection() {
     return Padding(
@@ -188,7 +187,7 @@ class TownCard extends StatelessWidget {
           SizedBox(
             width: 135, // Set width for the first container
             height: 120, // Set height for the first container
-            child: _buildSingleContainer(title1), // First container
+            child: _buildTempSection(title1), // First container
           ),
           const SizedBox(width: 10), // Spacing between the two containers
           SizedBox(
@@ -202,7 +201,7 @@ class TownCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSingleContainer(String title) {
+  Widget _buildTempSection(String title) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -361,6 +360,84 @@ class TownCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildVisibilityPressureSection(Map<String, dynamic> weatherData) {
+    final visibility = weatherData['visibility'] / 1000; // Convert meters to kilometers
+    final pressure = weatherData['main']['pressure'];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.teal, width: 2),
+                color: Colors.teal.withOpacity(0.1),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Visibility',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                  Text(
+                    '${visibility.toStringAsFixed(1)} km',
+                    style: const TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.teal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10), // Spacing between the containers
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.teal, width: 2),
+                color: Colors.teal.withOpacity(0.1),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Pressure',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                  Text(
+                    '${pressure.toString()} hPa',
+                    style: const TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.teal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
 
   String getGifForWeatherCondition(String iconCode) {
     switch (iconCode) {
