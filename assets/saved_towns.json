@@ -1,11 +1,39 @@
 {
-  "towns" : [
-    "Stockholm",
-    "Kampala",
-    "California",
-    "Berlin",
-    "London"
+  "towns": [
+    {
+      "name": "Oxford",
+      "latitude": 51.5074,
+      "longitude": -1.2577,
+      "country": "United Kingdom",
+      "currentLocation": false
+    },
+    {
+      "name": "Kyoto",
+      "latitude": 35.0116,
+      "longitude": 135.7681,
+      "country": "Japan",
+      "currentLocation": false
+    },
+    {
+      "name": "Florence",
+      "latitude": 43.7696,
+      "longitude": 11.2558,
+      "country": "Italy",
+      "currentLocation": false
+    },
+    {
+      "name": "Cape Town",
+      "latitude": -33.9249,
+      "longitude": 18.4241,
+      "country": "South Africa",
+      "currentLocation": true
+    },
+    {
+      "name": "Barcelona",
+      "latitude": 41.3851,
+      "longitude": 2.1734,
+      "country": "Spain",
+      "currentLocation": false
+    }
   ]
-
 }
-
