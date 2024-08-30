@@ -55,14 +55,12 @@ class TownCard extends StatelessWidget {
 
   // Fetch weather data from OpenWeatherMap API
   Future<Map<String, dynamic>> fetchWeatherData(String townName) async {
-    final apiKey = dotenv
-        .env['OPEN_WEATHER_API_KEY']; // Get the API key from the .env file
+    final apiKey = dotenv.env['OPEN_WEATHER_API_KEY']; // Get the API key from the .env file
     final url = Uri.parse(
         'https://api.openweathermap.org/data/2.5/weather?q=$townName&appid=$apiKey&units=metric');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
-      print(json.decode(response.body));
       return json.decode(response.body);
     } else {
       throw Exception('Failed to load weather data');
@@ -71,13 +69,11 @@ class TownCard extends StatelessWidget {
 
   // Load towns from JSON file
   Future<List<Town>> loadTownsFromJson() async {
-    final String response =
-        await rootBundle.loadString('assets/saved_towns.json');
+    final String response = await rootBundle.loadString('assets/saved_towns.json');
     final data = json.decode(response);
 
     // Ensure the JSON data is correctly structured
-    List<Town> towns =
-        List<Town>.from(data['towns'].map((town) => Town.fromJson(town)));
+    List<Town> towns = List<Town>.from(data['towns'].map((town) => Town.fromJson(town)));
 
     return towns;
   }
@@ -101,21 +97,25 @@ class TownCard extends StatelessWidget {
                   future: fetchWeatherData(town.name),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator(); // Show a loading indicator while fetching data
+                      return const Center(child: CircularProgressIndicator()); // Centered loading indicator
                     } else if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
+                      return Center(child: Text('Error: ${snapshot.error}')); // Centered error message
                     } else if (snapshot.hasData) {
                       final weatherData = snapshot.data!;
                       final temp = weatherData['main']['temp'];
+                      final tempMin = weatherData['main']['temp_min']; // Fetch minimum temperature
+                      final tempMax = weatherData['main']['temp_max']; // Fetch maximum temperature
                       final roundedTemp = temp.floor(); // Round down the temperature
+                      final roundedTempMin = tempMin.floor(); // Round down the minimum temperature
+                      final roundedTempMax = tempMax.floor(); // Round down the maximum temperature
                       final weatherDescription = weatherData['weather'][0]['description'];
                       final iconCode = weatherData['weather'][0]['icon'];
                       final gifPath = getGifForWeatherCondition(iconCode); // Get GIF path using the new method
 
                       return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildVisualSection('$roundedTemp °C', gifPath),
-                          // Row for Verbal Summary and UV Index with even spacing
+                          _buildVisualSection(roundedTemp, roundedTempMin, roundedTempMax, gifPath),
                           Row(
                             children: [
                               Expanded(
@@ -127,13 +127,13 @@ class TownCard extends StatelessWidget {
                                   future: fetchUVIndex(town.latitude, town.longitude),
                                   builder: (context, uvSnapshot) {
                                     if (uvSnapshot.connectionState == ConnectionState.waiting) {
-                                      return const CircularProgressIndicator(); // Show loading indicator for UV data
+                                      return const Center(child: CircularProgressIndicator()); // Centered loading indicator for UV data
                                     } else if (uvSnapshot.hasError) {
-                                      return Text('Error loading UV index: ${uvSnapshot.error}');
+                                      return Center(child: Text('Error loading UV index: ${uvSnapshot.error}')); // Centered error message for UV data
                                     } else if (uvSnapshot.hasData) {
                                       return _buildUVIndexSection(uvSnapshot.data!);
                                     } else {
-                                      return const Text('No UV data available');
+                                      return const Center(child: Text('No UV data available')); // Centered message for no UV data
                                     }
                                   },
                                 ),
@@ -142,16 +142,16 @@ class TownCard extends StatelessWidget {
                           ),
                           _buildVisibilityPressureSection(weatherData),
                           _buildWindHumiditySection(weatherData),
+                          _buildSection('Hourly Info'),
+                          _buildSection('Pollen & Driving Conditions'),
+                          _buildSection('Weekly Forecast'),
                         ],
                       );
                     } else {
-                      return const Text('No data available');
+                      return const Center(child: Text('No data available')); // Centered message for no data
                     }
                   },
                 ),
-                _buildSection('Hourly Info'),
-                _buildSection('Pollen & Driving Conditions'),
-                _buildSection('Weekly Forecast'),
               ],
             ),
           ),
@@ -160,9 +160,29 @@ class TownCard extends StatelessWidget {
     );
   }
 
-
-
-
+  Widget _buildSection(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.teal, width: 2),
+          color: Colors.teal.withOpacity(0.1),
+        ),
+        child: Center(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.teal,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildLocationSection() {
     return Padding(
@@ -178,9 +198,7 @@ class TownCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Icon(
-              isCurrentLocation
-                  ? Icons.location_on
-                  : Icons.location_on_outlined,
+              isCurrentLocation ? Icons.location_on : Icons.location_on_outlined,
               color: Colors.teal,
             ),
             Text(
@@ -206,29 +224,28 @@ class TownCard extends StatelessWidget {
     );
   }
 
-  Widget _buildVisualSection(String title1, String gifAssetPath) {
+  Widget _buildVisualSection(int temp, int tempMin, int tempMax, String gifAssetPath) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
           SizedBox(
-            width: 135, // Set width for the first container
-            height: 120, // Set height for the first container
-            child: _buildTempSection(title1), // First container
+            width: 135, // Set width for the temperature container
+            height: 120, // Set height for the temperature container
+            child: _buildTempSection(temp, tempMin, tempMax), // Temperature container
           ),
           const SizedBox(width: 10), // Spacing between the two containers
           SizedBox(
             width: 135, // Set width for the GIF container
             height: 120, // Set height for the GIF container
-            child:
-                _buildGifContainer(gifAssetPath), // Second container with GIF
+            child: _buildGifContainer(gifAssetPath), // Container with GIF
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTempSection(String title) {
+  Widget _buildTempSection(int temp, int tempMin, int tempMax) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -236,15 +253,33 @@ class TownCard extends StatelessWidget {
         border: Border.all(color: Colors.teal, width: 2),
         color: Colors.teal.withOpacity(0.1),
       ),
-      child: Center(
-        child: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.teal,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Max: $tempMax °C',
+            style: const TextStyle(
+              fontSize: 14.0,
+              color: Colors.teal,
+            ),
           ),
-        ),
+          const SizedBox(height: 5), // Spacing between temperatures
+          Text(
+            '$temp °C',
+            style: const TextStyle(
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.teal,
+            ),
+          ),
+          Text(
+            'Min: $tempMin °C',
+            style: const TextStyle(
+              fontSize: 14.0,
+              color: Colors.teal,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -257,33 +292,9 @@ class TownCard extends StatelessWidget {
         border: Border.all(color: Colors.teal, width: 2),
         color: Colors.teal.withOpacity(0.1),
       ),
-      child: Center(
-        child: Image.asset(
-          gifAssetPath, // Path to your GIF asset
-          fit: BoxFit.cover, // Adjust the GIF to fit the container
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSection(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.teal, width: 2),
-          color: Colors.teal.withOpacity(0.1),
-        ),
-        child: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.teal,
-          ),
-        ),
+      child: Image.asset(
+        gifAssetPath,
+        fit: BoxFit.cover, // Adjust fit as necessary
       ),
     );
   }
@@ -322,8 +333,6 @@ class TownCard extends StatelessWidget {
       ),
     );
   }
-
-
 
   Widget _buildWindHumiditySection(Map<String, dynamic> weatherData) {
     final windSpeed = weatherData['wind']['speed'];
@@ -386,7 +395,7 @@ class TownCard extends StatelessWidget {
                   Text(
                     '${humidity.toStringAsFixed(0)}%',
                     style: const TextStyle(
-                      fontSize: .0,
+                      fontSize: 12.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.teal,
                     ),
@@ -475,7 +484,6 @@ class TownCard extends StatelessWidget {
     );
   }
 
-  // Method to fetch UV index data using latitude and longitude
   Future<double> fetchUVIndex(double lat, double lon) async {
     final apiKey = dotenv.env['OPEN_WEATHER_API_KEY']; // Ensure the API key is loaded from the .env file
     final url = Uri.parse(
@@ -492,7 +500,6 @@ class TownCard extends StatelessWidget {
     }
   }
 
-// Method to build UV index section
   Widget _buildUVIndexSection(double uvIndex) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -526,7 +533,6 @@ class TownCard extends StatelessWidget {
       ),
     );
   }
-
 
   String getGifForWeatherCondition(String iconCode) {
     switch (iconCode) {
