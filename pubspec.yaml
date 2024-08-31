@@ -30,10 +30,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  carousel_slider: ^4.0.0
+  carousel_slider: ^5.0.0
   http: ^1.2.2
   geolocator: ^13.0.1
   flutter_dotenv: ^5.0.2
+  path_provider: ^2.1.4
+  shared_preferences: ^2.3.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -58,7 +60,6 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - assets/saved_towns.json
     - assets/media/sun_gif.gif
     - assets/media/sun_img.png
     - assets/media/cloudy_gif.gif
