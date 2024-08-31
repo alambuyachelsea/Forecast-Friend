@@ -3,8 +3,8 @@ import 'package:forecast_friend/town.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
+import 'package:shared_preferences/shared_preferences.dart';
 import 'town_card.dart'; // Make sure this import matches the location of your TownCard file
 
 class HomeTab extends StatefulWidget {
@@ -28,7 +28,7 @@ class _HomeTabState extends State<HomeTab> {
   Future<void> loadTownsAndFetchNearestCity() async {
     try {
       // Load towns from JSON file
-      List<Town> loadedTowns = await _loadTownsFromJson();
+      List<Town> loadedTowns = await _loadTownsFromSharedPreferences();
 
       // Fetch nearest city
       Position position = await _getCurrentLocation();
@@ -39,12 +39,12 @@ class _HomeTabState extends State<HomeTab> {
         currentLocation = nearestCity;
         towns = [
           Town(
-            name: nearestCity,
-            latitude: position.latitude,
-            longitude: position.longitude,
-            country: 'Unknown', // Update this as needed
-            currentLocation: true,
-          ),
+              name: nearestCity,
+              latitude: position.latitude,
+              longitude: position.longitude,
+              country: 'Unknown', // Update this as needed
+              currentLocation: true,
+              isSaved: false),
           ...loadedTowns
         ];
         isLoading = false;
@@ -53,28 +53,54 @@ class _HomeTabState extends State<HomeTab> {
       setState(() {
         towns = [
           Town(
-            name: 'Error finding nearest city or loading towns',
-            latitude: 0,
-            longitude: 0,
-            country: 'Unknown',
-            currentLocation: false,
-          )
+              name: 'Error',
+              latitude: 0,
+              longitude: 0,
+              country: 'Unknown',
+              currentLocation: false,
+              isSaved: false)
         ];
         isLoading = false;
       });
     }
+
+    setState(() {});
   }
+  Future<List<Town>> _loadTownsFromSharedPreferences() async {
 
-  // Load towns from the JSON file
-  Future<List<Town>> _loadTownsFromJson() async {
-    final String response =
-        await rootBundle.loadString('assets/saved_towns.json');
-    final data = json.decode(response);
-    List<dynamic> townList = data['towns'];
+    List<Town> towns = [];
 
-    // Convert the JSON list to a List of Town objects
-    List<Town> towns =
-        townList.map((townJson) => Town.fromJson(townJson)).toList();
+    try {
+      // Obtain the SharedPreferences instance
+      final prefs = await SharedPreferences.getInstance();
+
+      // Retrieve the JSON string from SharedPreferences
+      String? jsonString = prefs.getString('townsList');
+
+      if (jsonString != null) {
+
+        // Decode the JSON string to a Map<String, dynamic>
+        final data = jsonDecode(jsonString);
+
+        try {
+          // Use a for loop to iterate over the JSON list
+          for (var json in data) {
+            // Convert each JSON map to a Town object
+            Town town = Town.fromJson(json);
+            // Add the Town object to the list
+            towns.add(town);
+          }
+        } catch (e) {
+          print("Error parsing town list: $e");
+        }
+        return towns;
+      } else {
+        // Return an empty list if no data is found in SharedPreferences
+        return [];
+      }
+    } catch (e) {
+      print("Error here: $e");
+    }
     return towns;
   }
 
@@ -129,6 +155,8 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    setState(() {});
+
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : Padding(
@@ -146,4 +174,5 @@ class _HomeTabState extends State<HomeTab> {
             ),
           );
   }
+
 }

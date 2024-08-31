@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/services.dart'; // For rootBundle
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'town.dart';
-
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Define the TownCard widget
 class TownCard extends StatelessWidget {
@@ -59,17 +60,6 @@ class TownCard extends StatelessWidget {
     }
   }
 
-
-  // Load towns from JSON file
-  Future<List<Town>> loadTownsFromJson() async {
-    final String response = await rootBundle.loadString('assets/saved_towns.json');
-    final data = json.decode(response);
-
-    // Ensure the JSON data is correctly structured
-    List<Town> towns = List<Town>.from(data['towns'].map((town) => Town.fromJson(town)));
-
-    return towns;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -182,30 +172,6 @@ class TownCard extends StatelessWidget {
   }
 
 
-  Widget _buildSection(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.teal, width: 2),
-          color: Colors.teal.withOpacity(0.1),
-        ),
-        child: Center(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
-              color: Colors.teal,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildLocationSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -232,7 +198,11 @@ class TownCard extends StatelessWidget {
               ),
             ),
             if (!isCurrentLocation)
-              const ToggleStarButton()
+              ToggleStarButton(
+                town: town,
+                isInitiallySaved: town.isSaved, // Optionally pass the initial state if you have it
+
+              )
             else
               const Opacity(
                 opacity: 0.0, // Makes the icon fully transparent
@@ -245,6 +215,7 @@ class TownCard extends StatelessWidget {
       ),
     );
   }
+
 
   Widget _buildVisualSection(int temp, int tempMin, int tempMax, String gifAssetPath) {
     return Padding(
@@ -669,7 +640,7 @@ class TownCard extends StatelessWidget {
               Column(
                 children: filteredForecasts.map<Widget>((dailyData) {
                   final date = DateTime.fromMillisecondsSinceEpoch(dailyData['dt'] * 1000);
-                  final temp = dailyData['main']['temp'] as double;
+                  final temp = dailyData['main']['temp'];
                   final weatherIcon = dailyData['weather'][0]['icon'] as String;
 
                   return Padding(
@@ -692,7 +663,7 @@ class TownCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          '${temp.toStringAsFixed(1)}°C',
+                          '${temp}°C',
                           style: const TextStyle(
                             fontSize: 14.0,
                             fontWeight: FontWeight.bold,
@@ -734,8 +705,6 @@ class TownCard extends StatelessWidget {
         return '';
     }
   }
-
-
 
   String getGifForWeatherCondition(String iconCode) {
     switch (iconCode) {
@@ -779,33 +748,133 @@ extension StringExtensions on String {
   }
 }
 
+// New method to save the list of towns to SharedPreferences
+Future<void> saveTownsToSharedPreferences(List<Town> towns) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Convert each Town object in the list to JSON format
+    List<Map<String, dynamic>> jsonList = towns.map((town) => town.toJson()).toList();
+
+    // Convert the list of maps to a JSON string
+    String jsonString = jsonEncode(jsonList);
+
+    // Save the JSON string to SharedPreferences
+    await prefs.setString('townsList', jsonString);
+
+    print("Towns saved successfully.");
+  } catch (e) {
+    print("Error saving towns to SharedPreferences: $e");
+  }
+}
+
+Future<List<Town>> _loadTownsFromSharedPreferences() async {
+
+  List<Town> towns = [];
+
+  try {
+    // Obtain the SharedPreferences instance
+    final prefs = await SharedPreferences.getInstance();
+
+    // Retrieve the JSON string from SharedPreferences using a key, e.g., 'townsData'
+    String? jsonString = prefs.getString('townsList');
+
+    if (jsonString != null) {
+
+      // Decode the JSON string to a Map<String, dynamic>
+      final data = jsonDecode(jsonString);
+
+      try {
+        // Use a for loop to iterate over the JSON list
+        for (var json in data) {
+          // Convert each JSON map to a Town object
+          Town town = Town.fromJson(json);
+          // Add the Town object to the list
+          towns.add(town);
+        }
+
+      } catch (e) {
+        print("Error parsing town list: $e");
+      }
+      return towns;
+    } else {
+      // Return an empty list if no data is found in SharedPreferences
+      return [];
+    }
+  } catch (e) {
+    print("Error here: $e");
+  }
+
+  return towns;
+}
+
+
+void saveTown(Town townToSave) async {
+
+  List<Town> towns = await _loadTownsFromSharedPreferences();
+
+  towns.add(townToSave);
+  // save shared preferences
+
+  await saveTownsToSharedPreferences(towns);
+
+}
+
+// Remove town and save
+Future<void> removeTown(Town townToRemove) async {
+
+  List<Town> towns = await _loadTownsFromSharedPreferences();
+  print(towns.length);
+
+  // Filter out the town to remove
+  towns.removeWhere((town) => town.name == townToRemove.name);
+  await saveTownsToSharedPreferences(towns);
+  print('removed');
+  print(towns.length);
+
+}
+
+
 class ToggleStarButton extends StatefulWidget {
-  const ToggleStarButton({super.key});
+  final Town town;
+  final bool isInitiallySaved;
+
+  const ToggleStarButton({super.key, required this.town, this.isInitiallySaved = false});
 
   @override
   _ToggleStarButtonState createState() => _ToggleStarButtonState();
 }
 
 class _ToggleStarButtonState extends State<ToggleStarButton> {
-  bool _isFilled = true; // Tracks whether the icon is filled or outlined
+  late bool _isSaved;
 
-  void _toggleIcon() {
+  @override
+  void initState() {
+    super.initState();
+    _isSaved = widget.isInitiallySaved; // Initialize with the passed value
+  }
+
+  void _toggleSaved() async {
     setState(() {
-      _isFilled = !_isFilled; // Toggle the state between filled and outlined
+      _isSaved = !_isSaved;
     });
+
+    if (_isSaved) {
+      saveTown(widget.town); // Save the town to the JSON file
+    } else {
+      removeTown(widget.town); // Remove the town from the JSON file
+
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       icon: Icon(
-        _isFilled
-            ? Icons.star
-            : Icons.star_border, // Use filled or outlined icon based on state
-        color: Colors.yellow,
+        _isSaved ? Icons.star : Icons.star_border,
+        color: _isSaved ? Colors.yellow : Colors.grey,
       ),
-      onPressed:
-          _toggleIcon, // Toggle the icon when pressed remove or add city to list
+      onPressed: _toggleSaved,
     );
   }
 }

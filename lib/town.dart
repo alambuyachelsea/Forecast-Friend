@@ -26,6 +26,18 @@ class Town {
     );
   }
 
+  // Method to convert a Town object to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'latitude': latitude,
+      'longitude': longitude,
+      'country': country,
+      'currentLocation': currentLocation,
+      'isSaved': isSaved,
+    };
+}
+
   @override
   String toString() {
     return 'Town Details:\n'
