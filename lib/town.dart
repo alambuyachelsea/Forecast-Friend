@@ -4,6 +4,7 @@ class Town {
   final double longitude;
   final String country;
   final bool currentLocation;
+  final bool isSaved;
 
   Town({
     required this.name,
@@ -11,6 +12,7 @@ class Town {
     required this.longitude,
     required this.country,
     required this.currentLocation,
+    required this.isSaved,
   });
 
   factory Town.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class Town {
       longitude: json['longitude'].toDouble(),
       country: json['country'],
       currentLocation: json['currentLocation'],
+      isSaved: json['isSaved'],
     );
   }
 
@@ -30,6 +33,7 @@ class Town {
         'Latitude: $latitude\n'
         'Longitude: $longitude\n'
         'Country: $country\n'
-        'Current Location: $currentLocation';
+        'Current Location: $currentLocation\n'
+        'Starred: $isSaved';
   }
 }
