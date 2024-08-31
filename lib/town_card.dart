@@ -577,49 +577,64 @@ class TownCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Column(
-              children: hourlyData.map<Widget>((hourData) {
-                final time = DateTime.fromMillisecondsSinceEpoch(hourData['dt'] * 1000);
-                final temp = hourData['main']['temp'];
-                final weatherIcon = hourData['weather'][0]['icon'];
+            SizedBox(
+              height: 130, // Adjust height as needed
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: hourlyData.length,
+                itemBuilder: (context, index) {
+                  final hourData = hourlyData[index] as Map<String, dynamic>;
+                  final time = DateTime.fromMillisecondsSinceEpoch(hourData['dt'] * 1000);
+                  final temp = hourData['main']['temp'];
+                  final roundedTemp = temp.floor();
+                  final weatherIcon = hourData['weather'][0]['icon'] as String;
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5),
-                  child: Row(
-                    children: [
-                      Text(
-                        '${time.hour}:00',
-                        style: const TextStyle(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.teal,
+                  return Container(
+                    width: 100, // Adjust width as needed
+                    height: 50,
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.teal, width: 2),
+                      color: Colors.teal.withOpacity(0.1),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${time.hour}:00',
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Image.network(
-                        'http://openweathermap.org/img/wn/$weatherIcon.png',
-                        width: 40,
-                        height: 40,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        '${temp.toStringAsFixed(1)}°C',
-                        style: const TextStyle(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.teal,
+                        Image.network(
+                          'http://openweathermap.org/img/wn/$weatherIcon.png',
+                          width: 50,
+                          height: 50,
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                        Text(
+                          '${roundedTemp}°C',
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
 
   Widget _build5DayForecastSection(Map<String, dynamic> forecastData) {
     // Ensure forecastData contains 'list' and it's a List
@@ -644,10 +659,9 @@ class TownCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                '5-Day Forecast',
+                'This Week',
                 style: TextStyle(
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 14.0,
                   color: Colors.teal,
                 ),
               ),
@@ -663,7 +677,7 @@ class TownCard extends StatelessWidget {
                     child: Row(
                       children: [
                         Text(
-                          '${date.day}/${date.month}/${date.year}',
+                          _getDayName(date.weekday),
                           style: const TextStyle(
                             fontSize: 14.0,
                             fontWeight: FontWeight.bold,
@@ -696,6 +710,28 @@ class TownCard extends StatelessWidget {
       );
     } else {
       return const Center(child: Text('No valid forecast data available'));
+    }
+  }
+
+  // Helper function to get the day name
+  String _getDayName(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'Monday';
+      case DateTime.tuesday:
+        return 'Tuesday';
+      case DateTime.wednesday:
+        return 'Wednesday';
+      case DateTime.thursday:
+        return 'Thursday';
+      case DateTime.friday:
+        return 'Friday';
+      case DateTime.saturday:
+        return 'Saturday';
+      case DateTime.sunday:
+        return 'Sunday';
+      default:
+        return '';
     }
   }
 
