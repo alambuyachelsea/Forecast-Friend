@@ -99,8 +99,6 @@ class TownCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildVisualSection(roundedTemp, roundedTempMin, roundedTempMax, gifPath),
-                          _buildVisibilityPressureSection(weatherData),
-                          _buildWindHumiditySection(weatherData),
                           Row(
                             children: [
                               Expanded(
@@ -125,6 +123,9 @@ class TownCard extends StatelessWidget {
                               ),
                             ],
                           ),
+                          _buildVisibilityPressureSection(weatherData),
+                          _buildWindHumiditySection(weatherData),
+
                           FutureBuilder<Map<String, dynamic>>(
                             future: fetchHourlyForecastData(town.name),
                             builder: (context, hourlySnapshot) {
