@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:forecast_friend/town.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 import 'package:shared_preferences/shared_preferences.dart';
 import 'town_card.dart'; // Make sure this import matches the location of your TownCard file
+import 'town.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
