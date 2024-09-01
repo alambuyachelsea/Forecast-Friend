@@ -131,7 +131,7 @@ class SearchTabState extends State<SearchTab> {
             isSaved: false,
           );
         } else {
-          print('No results found.');
+          print('Location too specific.');
           return null;
         }
       } else {

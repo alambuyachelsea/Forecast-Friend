@@ -1,5 +1,5 @@
 name: task_assist
-description: "A to do list application."
+description: "A weather forecast application."
 publish_to: 'none'
 
 version: 1.0.0+1
