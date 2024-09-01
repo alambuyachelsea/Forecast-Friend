@@ -131,8 +131,7 @@ class _HomeTabState extends State<HomeTab> {
   Future<String> _findNearestCity(Position position) async {
     final lat = position.latitude;
     final lon = position.longitude;
-    final apiKey =
-        dotenv.env['LOCATIONS_API_KEY']; // Fetch the API key from .env file
+    final apiKey = dotenv.env['PLACES_API_KEY']; // Fetch the API key from .env file
 
     if (apiKey == null) {
       throw Exception('API key not found in .env file');
