@@ -67,7 +67,7 @@ class TownCard extends StatelessWidget {
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
+          width: MediaQuery.of(context).size.width * 0.8,
           height: 900, // Fixed height of the card
           padding: const EdgeInsets.all(20),
           child: SingleChildScrollView(
@@ -223,13 +223,13 @@ class TownCard extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 135, // Set width for the temperature container
+            width: 145, // Set width for the temperature container
             height: 120, // Set height for the temperature container
             child: _buildTempSection(temp, tempMin, tempMax), // Temperature container
           ),
           const SizedBox(width: 10), // Spacing between the two containers
           SizedBox(
-            width: 135, // Set width for the GIF container
+            width: 140, // Set width for the GIF container
             height: 120, // Set height for the GIF container
             child: _buildGifContainer(gifAssetPath), // Container with GIF
           ),
@@ -287,7 +287,7 @@ class TownCard extends StatelessWidget {
       ),
       child: Image.asset(
         gifAssetPath,
-        fit: BoxFit.cover, // Adjust fit as necessary
+        fit: BoxFit.cover,
       ),
     );
   }
@@ -810,18 +810,20 @@ Future<List<Town>> _loadTownsFromSharedPreferences() async {
 
 
 void saveTown(Town townToSave) async {
+  townToSave.setSaved(true);
 
   List<Town> towns = await _loadTownsFromSharedPreferences();
 
   towns.add(townToSave);
   // save shared preferences
-
   await saveTownsToSharedPreferences(towns);
 
 }
 
 // Remove town and save
 Future<void> removeTown(Town townToRemove) async {
+
+  townToRemove.setSaved(false);
 
   List<Town> towns = await _loadTownsFromSharedPreferences();
   print(towns.length);
@@ -831,6 +833,8 @@ Future<void> removeTown(Town townToRemove) async {
   await saveTownsToSharedPreferences(towns);
   print('removed');
   print(towns.length);
+
+
 
 }
 
