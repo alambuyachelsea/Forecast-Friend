@@ -66,8 +66,8 @@ class _HomeTabState extends State<HomeTab> {
 
     setState(() {});
   }
-  Future<List<Town>> _loadTownsFromSharedPreferences() async {
 
+  Future<List<Town>> _loadTownsFromSharedPreferences() async {
     List<Town> towns = [];
 
     try {
@@ -78,7 +78,6 @@ class _HomeTabState extends State<HomeTab> {
       String? jsonString = prefs.getString('townsList');
 
       if (jsonString != null) {
-
         // Decode the JSON string to a Map<String, dynamic>
         final data = jsonDecode(jsonString);
 
@@ -131,7 +130,8 @@ class _HomeTabState extends State<HomeTab> {
   Future<String> _findNearestCity(Position position) async {
     final lat = position.latitude;
     final lon = position.longitude;
-    final apiKey = dotenv.env['PLACES_API_KEY']; // Fetch the API key from .env file
+    final apiKey =
+        dotenv.env['PLACES_API_KEY']; // Fetch the API key from .env file
 
     if (apiKey == null) {
       throw Exception('API key not found in .env file');
@@ -173,5 +173,4 @@ class _HomeTabState extends State<HomeTab> {
             ),
           );
   }
-
 }
