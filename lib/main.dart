@@ -38,9 +38,9 @@ class MyHomePage extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
-            HomeTab(),
-            SearchTab(),
-            AboutTab(),
+            HomeTab(), // Shows current location and conditions
+            SearchTab(), // You can search for and save additional locations
+            AboutTab(), // About the application
           ],
         ),
         bottomNavigationBar: Container(
