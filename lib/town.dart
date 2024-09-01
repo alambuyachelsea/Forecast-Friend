@@ -4,7 +4,7 @@ class Town {
   final double longitude;
   final String country;
   final bool currentLocation;
-  bool _isSaved; // Change isSaved to a private field with an underscore
+  bool _isSaved;
 
   Town({
     required this.name,
@@ -12,8 +12,8 @@ class Town {
     required this.longitude,
     required this.country,
     required this.currentLocation,
-    required bool isSaved, // Use a regular parameter to set the initial value
-  }) : _isSaved = isSaved; // Initialize the private field in the constructor
+    required bool isSaved,
+  }) : _isSaved = isSaved;
 
   factory Town.fromJson(Map<String, dynamic> json) {
     return Town(
@@ -46,14 +46,4 @@ class Town {
     };
   }
 
-  @override
-  String toString() {
-    return 'Town Details:\n'
-        'Name: $name\n'
-        'Latitude: $latitude\n'
-        'Longitude: $longitude\n'
-        'Country: $country\n'
-        'Current Location: $currentLocation\n'
-        'Starred: $_isSaved';
-  }
 }

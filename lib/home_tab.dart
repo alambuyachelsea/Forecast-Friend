@@ -15,7 +15,7 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  List<Town> towns = []; // List to store the towns from JSON
+  List<Town> towns = []; // List to store the towns from shared preference
   String currentLocation = ''; // To store the nearest city name
   bool isLoading = true;
 
@@ -27,14 +27,14 @@ class _HomeTabState extends State<HomeTab> {
 
   Future<void> loadTownsAndFetchNearestCity() async {
     try {
-      // Load towns from JSON file
+      // Load towns from Shared Preferences
       List<Town> loadedTowns = await _loadTownsFromSharedPreferences();
 
       // Fetch nearest city
       Position position = await _getCurrentLocation();
       String nearestCity = await _findNearestCity(position);
 
-      // Combine nearest city with the towns from the JSON file
+      // Combine nearest city with the towns from the saved file
       setState(() {
         currentLocation = nearestCity;
         towns = [
@@ -108,6 +108,7 @@ class _HomeTabState extends State<HomeTab> {
     bool serviceEnabled;
     LocationPermission permission;
 
+    // Prompts user for location access permission
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       throw Exception('Location services are disabled.');
@@ -152,6 +153,7 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
+  // Build a town card for every town in the towns list
   @override
   Widget build(BuildContext context) {
     setState(() {});
