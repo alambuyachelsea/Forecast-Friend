@@ -10,25 +10,58 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  carousel_slider: ^5.0.0
+  http: ^1.2.2
+  geolocator: ^13.0.1
+  google_places_flutter: ^2.0.9
+  flutter_dotenv: ^5.0.2
+  path_provider: ^2.1.4
+  shared_preferences: ^2.3.2
+  permission_handler: ^11.0.0
+  uuid: ^4.5.0
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
   flutter_lints: ^4.0.0
 
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
 flutter:
   assets:
-    - assets/images/
+    - assets/media/sun_gif.gif
+    - assets/media/sun_img.png
+    - assets/media/cloudy_gif.gif
+    - assets/media/cloudy_img.png
+    - assets/media/fog_gif.gif
+    - assets/media/fog_img.png
+    - assets/media/rain_gif.gif
+    - assets/media/rain_img.png
+    - assets/media/snow_gif.gif
+    - assets/media/snow_img.png
+    - assets/media/windy_gif.gif
+    - assets/media/windy_img.png
+    - assets/media/clear_night.gif
+    - assets/media/night_clouds.gif
+    - assets/media/night_rain.gif
+    - assets/media/night_snow.gif
+    - assets/media/night_fog.gif
+    - .env
 
   uses-material-design: true
 
-  fonts:
-    - family: Belleza
-      fonts:
-        - asset: assets/fonts/Belleza-Regular.ttf
-    - family: Sacramento
-      fonts:
-        - asset: assets/fonts/Sacramento-Regular.ttf
-    - family: Sora
-      fonts:
-        - asset: assets/fonts/Sora-Regular.ttf
+
