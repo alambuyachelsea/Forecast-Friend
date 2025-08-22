@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
+import 'package:shared_preferences/shared_preferences.dart';
+import 'town_card.dart'; // Make sure this import matches the location of your TownCard file
+import 'town.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -11,69 +15,164 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  List<String> towns = [];
+  List<Town> towns = []; // List to store the towns from shared preference
+  String currentLocation = ''; // To store the nearest city name
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    loadTowns();
+    loadTownsAndFetchNearestCity();
   }
 
-  Future<void> loadTowns() async {
-    final String response = await rootBundle.loadString('assets/towns.json');
-    final List<dynamic> data = json.decode(response);
-    setState(() {
-      towns = data.map((town) => town['name'] as String).toList();
-    });
+  Future<void> loadTownsAndFetchNearestCity() async {
+    try {
+      // Load towns from Shared Preferences
+      List<Town> loadedTowns = await _loadTownsFromSharedPreferences();
+
+      // Fetch nearest city
+      Position position = await _getCurrentLocation();
+      String nearestCity = await _findNearestCity(position);
+
+      // Combine nearest city with the towns from the saved file
+      setState(() {
+        currentLocation = nearestCity;
+        towns = [
+          Town(
+              name: nearestCity,
+              latitude: position.latitude,
+              longitude: position.longitude,
+              country: 'Unknown', // Update this as needed
+              currentLocation: true,
+              isSaved: false),
+          ...loadedTowns
+        ];
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        towns = [
+          Town(
+              name: 'Error',
+              latitude: 0,
+              longitude: 0,
+              country: 'Unknown',
+              currentLocation: false,
+              isSaved: false)
+        ];
+        isLoading = false;
+      });
+    }
+
+    setState(() {});
   }
 
+  Future<List<Town>> _loadTownsFromSharedPreferences() async {
+    List<Town> towns = [];
+
+    try {
+      // Obtain the SharedPreferences instance
+      final prefs = await SharedPreferences.getInstance();
+
+      // Retrieve the JSON string from SharedPreferences
+      String? jsonString = prefs.getString('townsList');
+
+      if (jsonString != null) {
+        // Decode the JSON string to a Map<String, dynamic>
+        final data = jsonDecode(jsonString);
+
+        try {
+          // Use a for loop to iterate over the JSON list
+          for (var json in data) {
+            // Convert each JSON map to a Town object
+            Town town = Town.fromJson(json);
+            // Add the Town object to the list
+            towns.add(town);
+          }
+        } catch (e) {
+          print("Error parsing town list: $e");
+        }
+        return towns;
+      } else {
+        // Return an empty list if no data is found in SharedPreferences
+        return [];
+      }
+    } catch (e) {
+      print("Error here: $e");
+    }
+    return towns;
+  }
+
+  // Get the current location of the device
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Prompts user for location access permission
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Location permissions are denied.');
+      }
+    }
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+  }
+
+  // Find the nearest city using Google Places API
+  Future<String> _findNearestCity(Position position) async {
+    final lat = position.latitude;
+    final lon = position.longitude;
+    final apiKey =
+        dotenv.env['PLACES_API_KEY']; // Fetch the API key from .env file
+
+    if (apiKey == null) {
+      throw Exception('API key not found in .env file');
+    }
+
+    final response = await http.get(Uri.parse(
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=50000&type=locality&key=$apiKey'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['results'] != null && data['results'].isNotEmpty) {
+        return data['results'][0]['name'];
+      } else {
+        return 'No city found';
+      }
+    } else {
+      throw Exception('Failed to load nearest city');
+    }
+  }
+
+  // Build a town card for every town in the towns list
   @override
   Widget build(BuildContext context) {
-    return towns.isEmpty
+    setState(() {});
+
+    return isLoading
         ? const Center(child: CircularProgressIndicator())
-        : Scrollbar(
-      child: CarouselSlider(
-        options: CarouselOptions(
-          height: 700, // Set the height of the carousel
-          enableInfiniteScroll: false, // Disable infinite scroll
-          viewportFraction: 0.9, // Adjust this value to fill more space
-          autoPlay: false, // Disable autoplay
-          enlargeCenterPage: true,
-        ),
-        items: towns.map((town) {
-          return Builder(
-            builder: (BuildContext context) {
-              return Align(
-                alignment: Alignment.topCenter, // Align the card to the top
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 0.9, // Set the width of each card
-                    height: 660, // Set the height of each card
-                    margin: const EdgeInsets.only(top: 0.0), // Adjust the top margin
-                    decoration: BoxDecoration(
-                      color: Colors.teal,
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child: Center(
-                      child: Text(
-                        town,
-                        style: const TextStyle(
-                          fontSize: 24.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
+        : Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: PageView.builder(
+              itemCount: towns.length,
+              controller: PageController(viewportFraction: 0.8),
+              itemBuilder: (context, index) {
+                final town = towns[index];
+                return TownCard(
+                  town: town,
+                  isCurrentLocation: town.name == currentLocation,
+                );
+              },
+            ),
           );
-        }).toList(),
-      ),
-    );
   }
 }

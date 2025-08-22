@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'home_tab.dart';
 import 'search_tab.dart';
 import 'about_tab.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+Future<void> main() async {
+  await dotenv.load();
   runApp(const MyApp());
 }
 
@@ -36,9 +38,9 @@ class MyHomePage extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
-            HomeTab(),
-            SearchTab(),
-            AboutTab(),
+            HomeTab(), // Shows current location and conditions
+            SearchTab(), // You can search for and save additional locations
+            AboutTab(), // About the application
           ],
         ),
         bottomNavigationBar: Container(

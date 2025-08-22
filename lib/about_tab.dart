@@ -20,10 +20,12 @@ class AboutTab extends StatelessWidget {
           SizedBox(height: 16),
           Text(
             'This is an app developed for the course 1DV535 at Linneaus University. '
-            'It was built using Flutter and Open Weather Map API and was '
-            'developed by Alambuya Chelsea. '
+            'It was built using Flutter  APIs from Open Weather Map and Google'
+            ' Places and Geocode. '
+            'Developed by Alambuya Chelsea. '
             'Forecast Friend provides you with the latest weather updates in '
-            'your current and saved location to help you stay prepared.',
+            'your current and saved locations to help you stay prepared. '
+            ' You can additionally search for other areas to add to your favorites',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 15),
           ),
