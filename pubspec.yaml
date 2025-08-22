@@ -60,7 +60,7 @@ flutter:
     - assets/media/night_rain.gif
     - assets/media/night_snow.gif
     - assets/media/night_fog.gif
-    - .env
+    # - .env
 
   uses-material-design: true
 
