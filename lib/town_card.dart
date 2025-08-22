@@ -208,13 +208,13 @@ class TownCard extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 145,
+            width: 140,
             height: 120,
             child: _buildTempSection(temp, tempMin, tempMax), // Temperature container
           ),
           const SizedBox(width: 10), // Spacing between the two containers
           SizedBox(
-            width: 140,
+            width: 130,
             height: 120,
             child: _buildGifContainer(gifAssetPath), // Container with GIF
           ),
