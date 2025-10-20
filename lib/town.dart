@@ -4,7 +4,7 @@ class Town {
   final double longitude;
   final String country;
   final bool currentLocation;
-  final bool isSaved;
+  bool _isSaved;
 
   Town({
     required this.name,
@@ -12,8 +12,8 @@ class Town {
     required this.longitude,
     required this.country,
     required this.currentLocation,
-    required this.isSaved,
-  });
+    required bool isSaved,
+  }) : _isSaved = isSaved;
 
   factory Town.fromJson(Map<String, dynamic> json) {
     return Town(
@@ -26,6 +26,14 @@ class Town {
     );
   }
 
+  // Getter for isSaved
+  bool get isSaved => _isSaved;
+
+// Setter for isSaved
+  void setSaved(bool value) {
+    _isSaved = value;
+  }
+
   // Method to convert a Town object to JSON
   Map<String, dynamic> toJson() {
     return {
@@ -34,18 +42,8 @@ class Town {
       'longitude': longitude,
       'country': country,
       'currentLocation': currentLocation,
-      'isSaved': isSaved,
+      'isSaved': _isSaved,
     };
-}
-
-  @override
-  String toString() {
-    return 'Town Details:\n'
-        'Name: $name\n'
-        'Latitude: $latitude\n'
-        'Longitude: $longitude\n'
-        'Country: $country\n'
-        'Current Location: $currentLocation\n'
-        'Starred: $isSaved';
   }
+
 }
