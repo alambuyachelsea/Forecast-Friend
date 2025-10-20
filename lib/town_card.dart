@@ -24,6 +24,7 @@ class TownCard extends StatelessWidget {
     final url = Uri.parse(
         'https://api.openweathermap.org/data/2.5/weather?q=$townName&appid=$apiKey&units=metric');
     final response = await http.get(url);
+    print(response);
 
     if (response.statusCode == 200) {
       return json.decode(response.body);

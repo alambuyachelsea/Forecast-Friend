@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:forecast_friend/town.dart';
+import 'town.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'town_card.dart'; // Make sure this import matches the location of your TownCard file
+import 'town_card.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -32,17 +32,19 @@ class _HomeTabState extends State<HomeTab> {
 
       // Fetch nearest city
       Position position = await _getCurrentLocation();
-      String nearestCity = await _findNearestCity(position);
+      final data = await _getCityAndWeather(position);
+      print(data['name']);
+      print(data['sys']['country']);
 
       // Combine nearest city with the towns from the JSON file
       setState(() {
-        currentLocation = nearestCity;
+        currentLocation = data['name'];
         towns = [
           Town(
-              name: nearestCity,
+              name: data['name'],
               latitude: position.latitude,
               longitude: position.longitude,
-              country: 'Unknown', // Update this as needed
+              country: data['sys']['country'], // Update this as needed
               currentLocation: true,
               isSaved: false),
           ...loadedTowns
@@ -50,6 +52,7 @@ class _HomeTabState extends State<HomeTab> {
         isLoading = false;
       });
     } catch (e) {
+      print(e);
       setState(() {
         towns = [
           Town(
@@ -90,7 +93,7 @@ class _HomeTabState extends State<HomeTab> {
             towns.add(town);
           }
         } catch (e) {
-          print("Error parsing town list: $e");
+          print("Error: $e");
         }
         return towns;
       } else {
@@ -98,7 +101,7 @@ class _HomeTabState extends State<HomeTab> {
         return [];
       }
     } catch (e) {
-      print("Error here: $e");
+      print("Error: $e");
     }
     return towns;
   }
@@ -127,26 +130,26 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   // Find the nearest city using Google Places API
-  Future<String> _findNearestCity(Position position) async {
+  Future  _getCityAndWeather(Position position) async {
+
     final lat = position.latitude;
     final lon = position.longitude;
     final apiKey =
-        dotenv.env['PLACES_API_KEY']; // Fetch the API key from .env file
+        dotenv.env['OPEN_WEATHER_API_KEY'];
 
     if (apiKey == null) {
       throw Exception('API key not found in .env file');
     }
 
-    final response = await http.get(Uri.parse(
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=50000&type=locality&key=$apiKey'));
+    final url =
+        'https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=metric';
+    final response = await http.get(Uri.parse(url));
+
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['results'] != null && data['results'].isNotEmpty) {
-        return data['results'][0]['name'];
-      } else {
-        return 'No city found';
-      }
+      final Map<String, dynamic> data = json.decode(response.body);
+
+      return data;
     } else {
       throw Exception('Failed to load nearest city');
     }
